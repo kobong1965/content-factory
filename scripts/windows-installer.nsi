@@ -1,6 +1,8 @@
 Unicode true
 !include "MUI2.nsh"
 !include "x64.nsh"
+!include "FileFunc.nsh"
+Var TestMode
 Name "爆款内容工厂 ${VERSION}"
 OutFile "${OUTPUT}"
 InstallDir "$LOCALAPPDATA\Programs\ContentFactory"
@@ -13,6 +15,12 @@ SetCompressor /SOLID lzma
 !insertmacro MUI_PAGE_FINISH
 !insertmacro MUI_LANGUAGE "SimpChinese"
 Function .onInit
+  ${GetParameters} $0
+  ClearErrors
+  ${GetOptions} $0 "/TESTMODE" $TestMode
+  ${IfNot} ${Errors}
+    StrCpy $TestMode "1"
+  ${EndIf}
   ${IfNot} ${RunningX64}
     MessageBox MB_ICONSTOP "本软件需要 64 位 Windows。"
     Abort
@@ -31,7 +39,11 @@ Section "软件和运行组件"
     SetErrorLevel 1
     Abort
   ${EndIf}
-  WriteRegStr HKCU "Software\ContentFactory" "InstallRoot" "$INSTDIR"
-  WriteRegStr HKCU "Software\ContentFactory" "Version" "${VERSION}"
-  CreateShortCut "$DESKTOP\爆款内容工厂.lnk" "$INSTDIR\versions\${VERSION}\runtime\python\pythonw.exe" '-B "$INSTDIR\versions\${VERSION}\scripts\installed_launcher.py"' "$INSTDIR\versions\${VERSION}\content-factory-desktop.exe"
+  ${If} $TestMode != "1"
+    WriteRegStr HKCU "Software\ContentFactory" "InstallRoot" "$INSTDIR"
+    WriteRegStr HKCU "Software\ContentFactory" "Version" "${VERSION}"
+    CreateShortCut "$DESKTOP\爆款内容工厂.lnk" "$INSTDIR\versions\${VERSION}\runtime\python\pythonw.exe" '-B "$INSTDIR\versions\${VERSION}\scripts\installed_launcher.py"' "$INSTDIR\versions\${VERSION}\content-factory-desktop.exe"
+  ${Else}
+    CreateShortCut "$INSTDIR\Test Launch.lnk" "$INSTDIR\versions\${VERSION}\runtime\python\pythonw.exe" '-B "$INSTDIR\versions\${VERSION}\scripts\installed_launcher.py" --data-root "$INSTDIR\TestProfile"' "$INSTDIR\versions\${VERSION}\content-factory-desktop.exe"
+  ${EndIf}
 SectionEnd
