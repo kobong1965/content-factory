@@ -56,6 +56,16 @@ def verify_payloads(source, manifest):
             raise ValueError('Missing or damaged component: ' + name)
 
 
+def copy_internal_config(source, destination):
+    config=source/'model-config.cfcfg'
+    target=destination/'internal/model-config.cfcfg'
+    if config.is_file() and not target.exists():
+        target.parent.mkdir(exist_ok=True)
+        # Exclusive create preserves any configuration delivered earlier.
+        with config.open('rb') as incoming, target.open('xb') as outgoing:
+            shutil.copyfileobj(incoming,outgoing)
+
+
 def install(source, target, manifest, *, install_prerequisites=True):
     verify_payloads(source, manifest)
     version = manifest['version']
@@ -65,6 +75,9 @@ def install(source, target, manifest, *, install_prerequisites=True):
     destination = target / 'versions' / version
     if destination.exists():
         if (destination/'installed-manifest.json').is_file() and json.loads((destination/'installed-manifest.json').read_text('utf-8')) == manifest:
+            if any(not (destination/name).is_file() for name in manifest['required']):
+                raise ValueError('Existing installation is incomplete; preserved for recovery')
+            copy_internal_config(source,destination)
             return destination
         raise ValueError('Existing version is different; preserved without overwrite')
     required = sum(part['unpacked_bytes'] for part in manifest['parts']) + 1024**3
@@ -87,10 +100,7 @@ def install(source, target, manifest, *, install_prerequisites=True):
     if hashlib.sha256(content).hexdigest()!='b6ca5501cecd2ae189cac70de531daa7afe0d24a06402635e99f16b02ca61068':
         raise ValueError('Pinned analysis method verification failed')
     skill.write_bytes(content)
-    config = source/'model-config.cfcfg'
-    if config.is_file():
-        (stage/'internal').mkdir(exist_ok=True)
-        shutil.copyfile(config, stage/'internal/model-config.cfcfg')
+    copy_internal_config(source,stage)
     env = os.environ.copy()
     temporary = stage/'install-temp'
     temporary.mkdir()
