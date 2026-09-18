@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.0.0",
+  "fixture_data": true,
+  "draft_id": "metric_import_demo_001",
+  "import_kind": "ocr",
+  "status": "pending",
+  "source_name": "抖音数据截图.png",
+  "source_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+  "raw_text": "播放量 12800 点赞 920 完播率 31%",
+  "candidates": [{
+    "candidate_id": "candidate_demo_001",
+    "publication_id": "publication_demo_001",
+    "captured_at": "2026-08-31T01:00:00Z",
+    "confidence": "unconfirmed",
+    "metrics": {"views": 12800, "likes": 920, "completion_rate": 0.31},
+    "field_confidence": {"views": 0.96, "likes": 0.93, "completion_rate": 0.88}
+  }],
+  "errors": [],
+  "confirmed_snapshot_ids": [],
+  "created_by": "运营甲",
+  "created_at": "2026-08-31T01:01:00Z",
+  "updated_at": "2026-08-31T01:01:00Z"
+}

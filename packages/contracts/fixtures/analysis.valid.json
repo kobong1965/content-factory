@@ -1,0 +1,245 @@
+{
+  "schema_version": "1.1.0",
+  "fixture_data": true,
+  "status": "draft",
+  "revision": 1,
+  "analysis_id": "analysis_demo_001",
+  "video_id": "video_demo_001",
+  "duration_ms": 6000,
+  "source": {
+    "source_id": "source_demo_001",
+    "source_type": "local_file",
+    "source_uri": "fixtures/demo-video.mp4",
+    "imported_at": "2026-08-29T06:00:00Z",
+    "authorization_status": "internal"
+  },
+  "processing": {
+    "provider": "fixture-gateway",
+    "purpose": "analysis",
+    "model": "fixture-model",
+    "api_mode": "fixture",
+    "response_id": "fixture_response_001",
+    "prompt_version": "1.0.0",
+    "generated_at": "2026-08-29T06:10:00Z",
+    "duration_ms": 1234,
+    "upload_summary": {
+      "keyframe_count": 2,
+      "text_characters": 32,
+      "total_bytes": 2048,
+      "original_video_uploaded": false
+    }
+  },
+  "summary": {
+    "video_type": "talking_review",
+    "target_audience": {
+      "text": "关注肩线和面料质感的通勤男装用户",
+      "evidence_ids": ["evidence_demo_001", "evidence_demo_002"],
+      "confidence": 0.78,
+      "is_inference": true
+    },
+    "main_promise": {
+      "text": "通过上身效果与面料特写帮助用户判断版型质感",
+      "evidence_ids": ["evidence_demo_001", "evidence_demo_002"],
+      "confidence": 0.9,
+      "is_inference": false
+    },
+    "overall_conclusion": {
+      "text": "视频先提出可见判断，再用细节镜头完成证明。",
+      "evidence_ids": ["evidence_demo_001", "evidence_demo_002"],
+      "confidence": 0.92,
+      "is_inference": true
+    },
+    "hook_analysis": {
+      "text": "前三秒直接展示肩线并提出判断题，减少铺垫。",
+      "evidence_ids": ["evidence_demo_001"],
+      "confidence": 0.95,
+      "is_inference": true
+    },
+    "consumer_psychology": {
+      "text": "先看上身结果，再看细节证据，降低用户对质感的判断风险。",
+      "evidence_ids": ["evidence_demo_001", "evidence_demo_002"],
+      "confidence": 0.76,
+      "is_inference": true
+    },
+    "risks": [
+      {
+        "text": "样例没有真实评论与分时留存，心理与数据判断置信度有限。",
+        "evidence_ids": ["evidence_demo_001"],
+        "confidence": 0.98,
+        "is_inference": false
+      }
+    ]
+  },
+  "keyframes": [
+    { "id": "frame_demo_001", "shot_id": "shot_demo_001", "timestamp_ms": 800, "local_path": "fixtures/frame-001.jpg" },
+    { "id": "frame_demo_002", "shot_id": "shot_demo_002", "timestamp_ms": 4100, "local_path": "fixtures/frame-002.jpg" }
+  ],
+  "shots": [
+    {
+      "id": "shot_demo_001",
+      "start_ms": 0,
+      "end_ms": 3000,
+      "shot_size": "medium",
+      "camera_movement": "static",
+      "composition": "人物居中，衣服正面完整露出",
+      "performer_action": "抬手展示肩线",
+      "product_exposure": "夹克正面和领口",
+      "transcript": "肩线挺不挺，穿上就能看出来。",
+      "subtitle": "先看肩线",
+      "keyframe_refs": ["frame_demo_001"]
+    },
+    {
+      "id": "shot_demo_002",
+      "start_ms": 3000,
+      "end_ms": 6000,
+      "shot_size": "detail",
+      "camera_movement": "dolly",
+      "composition": "面料细节占满画面",
+      "performer_action": "手指轻压面料",
+      "product_exposure": "面料纹理和袖口",
+      "transcript": "近看纹理，再看上身的利落感。",
+      "subtitle": "纹理近看",
+      "keyframe_refs": ["frame_demo_002"]
+    }
+  ],
+  "timeline": [
+    {
+      "id": "timeline_demo_001",
+      "second_index": 0,
+      "start_ms": 0,
+      "end_ms": 3000,
+      "visual_event": "开场直接展示上身肩线",
+      "transcript": "肩线挺不挺，穿上就能看出来。",
+      "subtitle": "先看肩线",
+      "rhythm": "high",
+      "metric_refs": ["metric_demo_001"]
+    },
+    {
+      "id": "timeline_demo_002",
+      "second_index": 3,
+      "start_ms": 3000,
+      "end_ms": 6000,
+      "visual_event": "切换面料特写后回到上身",
+      "transcript": "近看纹理，再看上身的利落感。",
+      "subtitle": "纹理近看",
+      "rhythm": "medium",
+      "metric_refs": ["metric_demo_001"]
+    }
+  ],
+  "content_structure": [
+    {
+      "id": "structure_demo_001",
+      "order": 1,
+      "label": "提出判断",
+      "description": "直接给出肩线判断问题并展示上身效果。",
+      "start_ms": 0,
+      "end_ms": 3000,
+      "evidence_ids": ["evidence_demo_001"]
+    },
+    {
+      "id": "structure_demo_002",
+      "order": 2,
+      "label": "补充证明",
+      "description": "切换面料特写补充质感证据。",
+      "start_ms": 3000,
+      "end_ms": 6000,
+      "evidence_ids": ["evidence_demo_002"]
+    }
+  ],
+  "emotion_curve": [
+    {
+      "id": "emotion_demo_001",
+      "start_ms": 0,
+      "end_ms": 3000,
+      "intensity": 76,
+      "label": "快速判断",
+      "reason": "开场直接给出具体判断题。",
+      "evidence_ids": ["evidence_demo_001"]
+    },
+    {
+      "id": "emotion_demo_002",
+      "start_ms": 3000,
+      "end_ms": 6000,
+      "intensity": 61,
+      "label": "细节确认",
+      "reason": "面料特写把注意力转向证明。",
+      "evidence_ids": ["evidence_demo_002"]
+    }
+  ],
+  "comments": [],
+  "comment_insights": [],
+  "metric_snapshots": [
+    {
+      "id": "metric_demo_001",
+      "captured_at": "2026-08-29T06:05:00Z",
+      "source_type": "manual",
+      "confidence": 0.7,
+      "values": {
+        "play_count": 10000,
+        "follower_gain": 42,
+        "three_second_retention": 0.62,
+        "completion_rate": 0.31,
+        "like_count": 430,
+        "comment_count": 35,
+        "favorite_count": 67,
+        "share_count": 21,
+        "product_click_rate": 0.08,
+        "transaction_count": 12,
+        "conversion_rate": 0.015
+      }
+    }
+  ],
+  "evidence": [
+    {
+      "id": "evidence_demo_001",
+      "claim": "前三秒用穿着效果提出具体判断题",
+      "source_type": "shot",
+      "source_id": "shot_demo_001",
+      "start_ms": 0,
+      "end_ms": 3000,
+      "confidence": 0.95,
+      "is_inference": false
+    },
+    {
+      "id": "evidence_demo_002",
+      "claim": "细节特写为商品质感提供视觉证据",
+      "source_type": "keyframe",
+      "source_id": "frame_demo_002",
+      "start_ms": 3000,
+      "end_ms": 6000,
+      "confidence": 0.9,
+      "is_inference": false
+    }
+  ],
+  "scores": {
+    "score_version": "1.0.0",
+    "total_score": 78,
+    "items": [
+      { "dimension": "hook_strength", "weight": 0.2, "score": 82, "evidence_ids": ["evidence_demo_001"] },
+      { "dimension": "proof_strength", "weight": 0.15, "score": 80, "evidence_ids": ["evidence_demo_002"] },
+      { "dimension": "rhythm_efficiency", "weight": 0.15, "score": 76, "evidence_ids": ["evidence_demo_001"] },
+      { "dimension": "product_fit", "weight": 0.15, "score": 81, "evidence_ids": ["evidence_demo_002"] },
+      { "dimension": "consumer_psychology", "weight": 0.15, "score": 74, "evidence_ids": ["evidence_demo_001"] },
+      { "dimension": "interaction_design", "weight": 0.1, "score": 70, "evidence_ids": ["evidence_demo_001"] },
+      { "dimension": "data_result", "weight": 0.1, "score": 79, "evidence_ids": ["evidence_demo_002"] }
+    ]
+  },
+  "pattern_candidates": [
+    {
+      "id": "pattern_demo_001",
+      "name": "先判断再举证",
+      "mechanism": "先用穿着结果制造判断，再用细节镜头完成证明。",
+      "steps": [
+        { "id": "pattern_step_demo_001", "order": 1, "description": "开场提出穿着效果判断", "evidence_ids": ["evidence_demo_001"] },
+        { "id": "pattern_step_demo_002", "order": 2, "description": "用面料特写补充证据", "evidence_ids": ["evidence_demo_002"] }
+      ],
+      "necessary_conditions": ["开场必须完整露出上身效果", "细节镜头必须清晰"],
+      "failure_signals": ["只说卖点但没有画面证据", "开场铺垫超过三秒"]
+    }
+  ],
+  "review": {
+    "reviewer": null,
+    "reviewed_at": null,
+    "note": null
+  }
+}

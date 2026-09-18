@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atai.local/schemas/material-import-task/1.0.0",
+  "title": "爆款内容工厂素材导入任务",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "fixture_data", "task_id", "product_id", "source_script_id", "source_name", "status", "progress", "current_step", "attempt_count", "max_attempts", "material_id", "error", "created_at", "updated_at"],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "fixture_data": { "type": "boolean" },
+    "task_id": { "$ref": "#/$defs/id" },
+    "product_id": { "$ref": "#/$defs/id" },
+    "source_script_id": { "type": ["string", "null"] },
+    "source_name": { "type": "string", "minLength": 1, "maxLength": 255 },
+    "status": { "enum": ["pending", "running", "retry_wait", "completed", "failed"] },
+    "progress": { "type": "integer", "minimum": 0, "maximum": 100 },
+    "current_step": { "enum": ["queued", "probe", "copy", "proxy", "audio", "asr", "scenes", "keyframes", "archive", "recognize", "completed", "failed"] },
+    "attempt_count": { "type": "integer", "minimum": 0 },
+    "max_attempts": { "type": "integer", "minimum": 1, "maximum": 5 },
+    "material_id": { "type": ["string", "null"] },
+    "error": { "type": ["string", "null"], "maxLength": 500 },
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" }
+  },
+  "$defs": { "id": { "type": "string", "pattern": "^[a-z][a-z0-9_-]{2,63}$" } }
+}

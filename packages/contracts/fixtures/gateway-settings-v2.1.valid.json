@@ -1,0 +1,41 @@
+{
+  "schema_version": "2.1.0",
+  "base_url": "https://api.openai.com/v1",
+  "model": "gpt-multimodal-model",
+  "api_mode": "responses",
+  "api_key_configured": true,
+  "default_model_id": "model_gpt",
+  "models": [
+    {
+      "model_id": "model_gpt",
+      "display_name": "GPT 多模态模型",
+      "provider": "openai",
+      "base_url": "https://api.openai.com/v1",
+      "model": "gpt-multimodal-model",
+      "api_mode": "responses",
+      "modalities": ["text", "image"],
+      "purposes": ["analysis", "script", "material", "video_review"],
+      "enabled": true,
+      "api_key_configured": true
+    },
+    {
+      "model_id": "model_qwen",
+      "display_name": "Qwen 多模态模型",
+      "provider": "qwen",
+      "base_url": "https://qwen.example.com/v1",
+      "model": "qwen-multimodal-model",
+      "api_mode": "chat_completions",
+      "modalities": ["text", "image"],
+      "purposes": ["analysis", "script", "material", "video_review"],
+      "enabled": true,
+      "api_key_configured": true
+    }
+  ],
+  "routing": {
+    "analysis": "model_gpt",
+    "script": "model_qwen",
+    "material": "model_qwen",
+    "video_review": "model_gpt"
+  },
+  "updated_at": "2026-09-05T08:00:00Z"
+}

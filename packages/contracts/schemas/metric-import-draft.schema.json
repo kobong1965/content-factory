@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://content-factory.local/schemas/metric-import-draft.schema.json",
+  "title": "S8 metric import draft",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "fixture_data", "draft_id", "import_kind", "status", "source_name", "source_sha256", "raw_text", "candidates", "errors", "confirmed_snapshot_ids", "created_by", "created_at", "updated_at"],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "fixture_data": {"type": "boolean"},
+    "draft_id": {"type": "string", "pattern": "^metric_import_[A-Za-z0-9_-]{6,80}$"},
+    "import_kind": {"enum": ["csv", "ocr"]},
+    "status": {"enum": ["pending", "confirmed", "rejected"]},
+    "source_name": {"type": "string", "minLength": 1, "maxLength": 255},
+    "source_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "raw_text": {"type": "string", "maxLength": 20000},
+    "candidates": {
+      "type": "array", "minItems": 1, "maxItems": 500,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["candidate_id", "publication_id", "captured_at", "confidence", "metrics", "field_confidence"],
+        "properties": {
+          "candidate_id": {"type": "string", "pattern": "^candidate_[A-Za-z0-9_-]{6,80}$"},
+          "publication_id": {"type": "string", "pattern": "^publication_[A-Za-z0-9_-]{6,80}$"},
+          "captured_at": {"type": "string", "format": "date-time"},
+          "confidence": {"enum": ["confirmed", "estimated", "unconfirmed"]},
+          "metrics": {"type": "object", "additionalProperties": {"type": ["integer", "number"]}, "minProperties": 1},
+          "field_confidence": {"type": "object", "additionalProperties": {"type": "number", "minimum": 0, "maximum": 1}}
+        }
+      }
+    },
+    "errors": {"type": "array", "items": {"type": "string", "maxLength": 500}, "maxItems": 500},
+    "confirmed_snapshot_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "created_by": {"type": "string", "minLength": 1, "maxLength": 100},
+    "created_at": {"type": "string", "format": "date-time"},
+    "updated_at": {"type": "string", "format": "date-time"}
+  }
+}

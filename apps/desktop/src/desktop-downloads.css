@@ -1,0 +1,4 @@
+.desktop-download-status { position:fixed; bottom:24px; right:24px; z-index:1500; width:min(560px,calc(100vw - 48px)); max-height:calc(100vh - 48px); overflow:auto; background:var(--surface,#fff); color:var(--ink,#202a32); border:1px solid var(--line,#ccd2d8); border-radius:12px; padding:20px; box-shadow:0 8px 28px #15233226; }
+.desktop-download-status p { margin:0 0 12px; }
+.desktop-download-path { overflow-wrap:anywhere; font-size:var(--font-assist,14px); }
+.desktop-download-status button { margin:4px 12px 0 0; }

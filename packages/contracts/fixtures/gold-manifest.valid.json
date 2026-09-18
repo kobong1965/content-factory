@@ -1,0 +1,34 @@
+{
+  "schema_version": "1.0.0",
+  "fixture_data": true,
+  "project_id": "content_factory_menswear",
+  "required_video_count": 20,
+  "required_product_count": 3,
+  "video_slots": [
+    { "slot_id": "video_demo_001", "case_file": "gold-case.valid.json", "status": "in_progress" },
+    { "slot_id": "video_demo_002", "case_file": null, "status": "pending" },
+    { "slot_id": "video_demo_003", "case_file": null, "status": "pending" },
+    { "slot_id": "video_demo_004", "case_file": null, "status": "pending" },
+    { "slot_id": "video_demo_005", "case_file": null, "status": "pending" },
+    { "slot_id": "video_demo_006", "case_file": null, "status": "pending" },
+    { "slot_id": "video_demo_007", "case_file": null, "status": "pending" },
+    { "slot_id": "video_demo_008", "case_file": null, "status": "pending" },
+    { "slot_id": "video_demo_009", "case_file": null, "status": "pending" },
+    { "slot_id": "video_demo_010", "case_file": null, "status": "pending" },
+    { "slot_id": "video_demo_011", "case_file": null, "status": "pending" },
+    { "slot_id": "video_demo_012", "case_file": null, "status": "pending" },
+    { "slot_id": "video_demo_013", "case_file": null, "status": "pending" },
+    { "slot_id": "video_demo_014", "case_file": null, "status": "pending" },
+    { "slot_id": "video_demo_015", "case_file": null, "status": "pending" },
+    { "slot_id": "video_demo_016", "case_file": null, "status": "pending" },
+    { "slot_id": "video_demo_017", "case_file": null, "status": "pending" },
+    { "slot_id": "video_demo_018", "case_file": null, "status": "pending" },
+    { "slot_id": "video_demo_019", "case_file": null, "status": "pending" },
+    { "slot_id": "video_demo_020", "case_file": null, "status": "pending" }
+  ],
+  "product_slots": [
+    { "slot_id": "product_demo_001", "profile_file": "product.valid.json", "status": "in_progress" },
+    { "slot_id": "product_demo_002", "profile_file": null, "status": "pending" },
+    { "slot_id": "product_demo_003", "profile_file": null, "status": "pending" }
+  ]
+}

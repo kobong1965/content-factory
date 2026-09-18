@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0.0",
+  "fixture_data": true,
+  "asset_id": "edit_audio_demo_001",
+  "kind": "bgm",
+  "name": "工程样例节奏",
+  "original_name": "工程样例节奏.wav",
+  "mime_type": "audio/wav",
+  "sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+  "size_bytes": 96000,
+  "duration_ms": 6000,
+  "sample_rate": 48000,
+  "channels": 2,
+  "license_note": "由工程脚本本地生成，仅用于自动化验收",
+  "imported_by": "工程验收",
+  "created_at": "2026-08-29T12:01:00Z"
+}

@@ -1,0 +1,88 @@
+{
+  "schema_version": "1.0.0",
+  "fixture_data": true,
+  "revision": 1,
+  "project_id": "edit_project_demo_001",
+  "script_id": "script_demo_001",
+  "script_revision": 1,
+  "product_id": "product_demo_001",
+  "status": "draft",
+  "settings": {
+    "width": 1080,
+    "height": 1920,
+    "fps": 30,
+    "video_codec": "h264",
+    "audio_codec": "aac",
+    "color_preset": "natural",
+    "normalize_voice": true,
+    "reduce_noise": true,
+    "auto_sound_effects": true,
+    "original_volume": 1.0,
+    "bgm_asset_id": null,
+    "bgm_volume": 0.12,
+    "output_clean_copy": true,
+    "subtitle_style": {
+      "enabled": true,
+      "font_family": "Microsoft YaHei",
+      "font_size": 54,
+      "primary_color": "#FFFFFF",
+      "outline_color": "#111827",
+      "margin_v": 180
+    }
+  },
+  "variants": [
+    {
+      "id": "edit_variant_demo_a",
+      "script_version_id": "version_demo_a",
+      "name": "肩线判断版",
+      "duration_ms": 6000,
+      "clips": [{
+        "id": "edit_clip_demo_a1", "order": 1, "script_shot_id": "script_shot_demo_a1",
+        "material_id": "material_demo_001", "material_clip_id": "clip_demo_001",
+        "source_start_ms": 0, "source_end_ms": 2500, "timeline_start_ms": 0, "timeline_end_ms": 6000,
+        "speed": 0.5, "crop_mode": "fill", "focus_x": 0.5, "focus_y": 0.45,
+        "transition": "cut", "transition_ms": 0, "subtitle": "先看肩线，再看纹理",
+        "voiceover": "一件夹克精神不精神，先看肩线，再近看面料纹理。",
+        "sound_effect": "轻微转场音", "has_source_audio": true, "original_volume": 1.0, "note": ""
+      }],
+      "warnings": ["源片段短于脚本镜头，末帧将保守延长"],
+      "latest_output_id": null
+    },
+    {
+      "id": "edit_variant_demo_b",
+      "script_version_id": "version_demo_b",
+      "name": "细节开场版",
+      "duration_ms": 6000,
+      "clips": [{
+        "id": "edit_clip_demo_b1", "order": 1, "script_shot_id": "script_shot_demo_b1",
+        "material_id": "material_demo_001", "material_clip_id": "clip_demo_002",
+        "source_start_ms": 2500, "source_end_ms": 6000, "timeline_start_ms": 0, "timeline_end_ms": 6000,
+        "speed": 0.6, "crop_mode": "fill", "focus_x": 0.5, "focus_y": 0.5,
+        "transition": "fade", "transition_ms": 120, "subtitle": "近看纹理，拉远看版型",
+        "voiceover": "近看是纹理，拉远看是标准合体的利落轮廓。",
+        "sound_effect": "无", "has_source_audio": true, "original_volume": 1.0, "note": ""
+      }],
+      "warnings": [],
+      "latest_output_id": null
+    },
+    {
+      "id": "edit_variant_demo_c",
+      "script_version_id": "version_demo_c",
+      "name": "通勤场景版",
+      "duration_ms": 6000,
+      "clips": [{
+        "id": "edit_clip_demo_c1", "order": 1, "script_shot_id": "script_shot_demo_c1",
+        "material_id": "material_demo_001", "material_clip_id": "clip_demo_001",
+        "source_start_ms": 0, "source_end_ms": 2500, "timeline_start_ms": 0, "timeline_end_ms": 6000,
+        "speed": 0.5, "crop_mode": "fit", "focus_x": 0.5, "focus_y": 0.5,
+        "transition": "cut", "transition_ms": 0, "subtitle": "穿好就能利落出门",
+        "voiceover": "标准合体的轮廓，穿好就能利落出门。",
+        "sound_effect": "衣架轻响", "has_source_audio": true, "original_volume": 1.0, "note": ""
+      }],
+      "warnings": ["这个片段也出现在其他剪辑版本，发布前请检查重复感"],
+      "latest_output_id": null
+    }
+  ],
+  "created_at": "2026-08-29T12:00:00Z",
+  "updated_at": "2026-08-29T12:00:00Z"
+}

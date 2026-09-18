@@ -1,0 +1,25 @@
+{
+  "schema_version": "1.0.0",
+  "fixture_data": true,
+  "ocr_id": "ocr_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "media_task_id": "media_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "status": "completed",
+  "engine": { "name": "rapidocr", "version": "3.9.2" },
+  "frames": [
+    {
+      "shot_id": "shot_001",
+      "keyframe_id": "frame_fixture_001",
+      "keyframe_path": "fixtures/frame-001.jpg",
+      "lines": [
+        {
+          "id": "ocr_line_fixture_001",
+          "text": "先看肩线",
+          "confidence": 0.96,
+          "bbox": [12, 24, 180, 48]
+        }
+      ]
+    }
+  ],
+  "timings_ms": { "total": 42 },
+  "created_at": "2026-08-29T06:08:00Z"
+}

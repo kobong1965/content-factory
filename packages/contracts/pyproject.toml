@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=80"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "content-factory-contracts"
+version = "0.1.0"
+description = "爆款内容工厂 S1 数据合同与校验器"
+requires-python = ">=3.11"
+dependencies = [
+    "jsonschema[format-nongpl]==4.26.0",
+]
+
+[project.scripts]
+content-factory-contracts = "content_factory_contracts.cli:main"
+
+[project.optional-dependencies]
+dev = [
+    "pytest==9.1.1",
+]
+
+[tool.setuptools.packages.find]
+where = ["python"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

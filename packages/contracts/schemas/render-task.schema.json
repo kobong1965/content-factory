@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atai.local/schemas/render-task/1.0.0",
+  "title": "爆款内容工厂渲染任务",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "fixture_data", "task_id", "project_id", "project_revision", "variant_id", "status", "progress", "current_step", "attempt_count", "max_attempts", "output_id", "error", "created_at", "updated_at"],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "fixture_data": { "type": "boolean" },
+    "task_id": { "$ref": "#/$defs/id" },
+    "project_id": { "$ref": "#/$defs/id" },
+    "project_revision": { "type": "integer", "minimum": 1 },
+    "variant_id": { "$ref": "#/$defs/id" },
+    "status": { "enum": ["pending", "running", "retry_wait", "completed", "failed"] },
+    "progress": { "type": "integer", "minimum": 0, "maximum": 100 },
+    "current_step": { "enum": ["queued", "prepare", "render_clips", "concat", "subtitles", "audio", "package", "completed", "failed"] },
+    "attempt_count": { "type": "integer", "minimum": 0 },
+    "max_attempts": { "type": "integer", "minimum": 1, "maximum": 5 },
+    "output_id": { "type": ["string", "null"] },
+    "error": { "type": ["string", "null"], "maxLength": 500 },
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" }
+  },
+  "$defs": { "id": { "type": "string", "pattern": "^[a-z][a-z0-9_-]{2,63}$" } }
+}

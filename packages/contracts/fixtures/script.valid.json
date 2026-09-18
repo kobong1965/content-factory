@@ -1,0 +1,162 @@
+{
+  "schema_version": "1.1.0",
+  "fixture_data": true,
+  "revision": 1,
+  "script_id": "script_demo_001",
+  "product_id": "product_demo_001",
+  "product_revision": 1,
+  "pattern_id": "pattern_demo_001",
+  "source_analysis_id": "analysis_demo_001",
+  "source_analysis_revision": 1,
+  "content_goal": "seeding",
+  "target_audience": "需要通勤外套的成年男性",
+  "generation": {
+    "task_id": "script_task_demo_001",
+    "provider": "fixture-relay",
+    "model": "fixture-model",
+    "api_mode": "responses",
+    "response_id": "fixture-response-001",
+    "prompt_version": "1.0.0",
+    "generated_at": "2026-08-29T06:10:00Z",
+    "duration_ms": 100,
+    "original_video_uploaded": false
+  },
+  "created_at": "2026-08-29T06:10:00Z",
+  "updated_at": "2026-08-29T06:20:00Z",
+  "production_mode": {
+    "kind": "fixed_livestream_long_take",
+    "scene": "固定直播间",
+    "camera": "固定直播间竖屏机位（不移动）",
+    "lighting": "固定直播间灯光",
+    "performer_count": 1,
+    "primary_take": "continuous_long_take",
+    "detail_overlays": "optional_reusable_same_product"
+  },
+  "selected_version_id": "version_demo_a",
+  "versions": [
+    {
+      "id": "version_demo_a",
+      "name": "肩线判断版",
+      "primary_hook": "一件夹克精神不精神，先看肩线。",
+      "differentiation": "先拍完整上身，再补面料证据。",
+      "similarity_risk": "low",
+      "duration_ms": 6000,
+      "fact_ids": ["fact_fabric_demo_001", "fact_fit_demo_001"],
+      "pattern_step_ids": ["pattern_step_demo_001", "pattern_step_demo_002"],
+      "shots": [
+        {
+          "id": "script_shot_demo_a1",
+          "order": 1,
+          "start_ms": 0,
+          "end_ms": 6000,
+          "visual": "主播在固定画面内正面站立，先指向肩线；需要时覆盖同款面料细节画面",
+          "voiceover": "一件夹克精神不精神，先看肩线，再近看面料纹理。",
+          "action": "主播保持在机位内，先自然站立，再抬手展示袖口",
+          "shot_size": "固定中景",
+          "camera": "固定直播间竖屏机位（不移动）",
+          "subtitle": "先看肩线，再看纹理",
+          "sound_effect": "轻微转场音",
+          "bgm": "低音量节奏音乐",
+          "transition": "无（连续长镜头）",
+          "material_status": "required",
+          "fact_ids": ["fact_fabric_demo_001", "fact_fit_demo_001"],
+          "pattern_step_id": "pattern_step_demo_001",
+          "source_shot_id": null,
+          "delivery": { "tone": "像提醒朋友一样直接可信", "pacing": "开头稍快，卖点处放慢", "emphasis": "重读肩线和面料纹理", "pause": "说完先看肩线后停顿约 0.3 秒" },
+          "performance": { "expression": "开头轻微挑眉，随后自然微笑", "eye_line": "主体直视镜头，指向商品时短暂看商品", "body_action": "原地站立并轻微转肩", "product_action": "抬手指向肩线和袖口" },
+          "detail_overlay": { "mode": "optional_detail", "detail_tag": "面料纹理", "instruction": "主播原声连续播放时覆盖同款面料近景" },
+          "evidence_ids": ["evidence_demo_001"]
+        }
+      ]
+    },
+    {
+      "id": "version_demo_b",
+      "name": "细节开场版",
+      "primary_hook": "先别看全身，近一点看这块面料。",
+      "differentiation": "用纹理细节开场，再揭示完整版型。",
+      "similarity_risk": "low",
+      "duration_ms": 6000,
+      "fact_ids": ["fact_fabric_demo_001", "fact_fit_demo_001"],
+      "pattern_step_ids": ["pattern_step_demo_001", "pattern_step_demo_002"],
+      "shots": [
+        {
+          "id": "script_shot_demo_b1",
+          "order": 1,
+          "start_ms": 0,
+          "end_ms": 6000,
+          "visual": "主播在固定画面内先将面料靠近镜头，再退回原站位展示完整上身",
+          "voiceover": "近看是纹理，拉远看是标准合体的利落轮廓。",
+          "action": "手指轻压面料后自然垂手",
+          "shot_size": "固定中景，商品主动靠近镜头",
+          "camera": "固定直播间竖屏机位（不移动）",
+          "subtitle": "近看纹理，拉远看版型",
+          "sound_effect": "无",
+          "bgm": "轻节奏音乐",
+          "transition": "无（连续长镜头）",
+          "material_status": "required",
+          "fact_ids": ["fact_fabric_demo_001", "fact_fit_demo_001"],
+          "pattern_step_id": "pattern_step_demo_002",
+          "source_shot_id": null,
+          "delivery": { "tone": "克制说明，不夸张", "pacing": "前快后稳", "emphasis": "重读纹理和标准合体", "pause": "纹理后短暂停顿" },
+          "performance": { "expression": "专注观察商品细节", "eye_line": "先看商品，再回到镜头", "body_action": "原地前伸双手后收回", "product_action": "把面料靠近镜头再恢复全身展示" },
+          "detail_overlay": { "mode": "optional_detail", "detail_tag": "面料纹理", "instruction": "可用同款已标记细节素材覆盖，保留主播原声" },
+          "evidence_ids": ["evidence_demo_002"]
+        }
+      ]
+    },
+    {
+      "id": "version_demo_c",
+      "name": "通勤场景版",
+      "primary_hook": "早上赶时间，外套要做到拿起就能穿。",
+      "differentiation": "把版型卖点放进真实通勤动作。",
+      "similarity_risk": "low",
+      "duration_ms": 6000,
+      "fact_ids": ["fact_fit_demo_001"],
+      "pattern_step_ids": ["pattern_step_demo_001"],
+      "shots": [
+        {
+          "id": "script_shot_demo_c1",
+          "order": 1,
+          "start_ms": 0,
+          "end_ms": 6000,
+          "visual": "主播在固定机位画面内拿起夹克穿好并整理领口",
+          "voiceover": "标准合体的轮廓，穿好就能利落出门。",
+          "action": "在固定站位完成拿衣、穿衣和整理领口，不走出画面",
+          "shot_size": "全身中景",
+          "camera": "固定直播间竖屏机位（不移动）",
+          "subtitle": "穿好就能利落出门",
+          "sound_effect": "衣架轻响",
+          "bgm": "通勤感节奏音乐",
+          "transition": "无（连续长镜头）",
+          "material_status": "required",
+          "fact_ids": ["fact_fit_demo_001"],
+          "pattern_step_id": "pattern_step_demo_001",
+          "source_shot_id": null,
+          "delivery": { "tone": "自然、有生活感", "pacing": "均匀清楚", "emphasis": "重读标准合体和利落", "pause": "句末自然收住" },
+          "performance": { "expression": "轻松自然", "eye_line": "穿衣时看商品，整理好后直视镜头", "body_action": "原地穿衣并整理领口", "product_action": "展示穿好后的肩线和轮廓" },
+          "detail_overlay": { "mode": "none", "detail_tag": null, "instruction": "全程保留主播固定机位画面" },
+          "evidence_ids": ["evidence_demo_001"]
+        }
+      ]
+    }
+  ],
+  "shooting_order": [
+    {
+      "scene": "固定直播间",
+      "equipment": "固定竖屏机位、三脚架、固定直播间灯光",
+      "shot_ids": ["script_shot_demo_a1", "script_shot_demo_b1", "script_shot_demo_c1"]
+    }
+  ],
+  "material_checklist": [
+    { "shot_id": "script_shot_demo_a1", "status": "required", "notes": "连续录制主播口播；同款面料细节可后补并覆盖画面" },
+    { "shot_id": "script_shot_demo_b1", "status": "required", "notes": "连续录制主播口播，商品主动靠近固定镜头" },
+    { "shot_id": "script_shot_demo_c1", "status": "required", "notes": "主播在固定机位内连续完成穿衣动作" }
+  ],
+  "review": {
+    "status": "approved",
+    "checked_by": "fixture-reviewer",
+    "checked_at": "2026-08-29T06:20:00Z",
+    "note": "工程样例审核记录",
+    "issues": []
+  }
+}

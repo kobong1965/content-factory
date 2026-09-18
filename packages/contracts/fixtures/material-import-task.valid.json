@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0.0",
+  "fixture_data": true,
+  "task_id": "material_task_demo_001",
+  "product_id": "product_demo_001",
+  "source_script_id": "script_demo_001",
+  "source_name": "工程样例实拍.mp4",
+  "status": "completed",
+  "progress": 100,
+  "current_step": "completed",
+  "attempt_count": 1,
+  "max_attempts": 2,
+  "material_id": "material_demo_001",
+  "error": null,
+  "created_at": "2026-08-29T08:59:00Z",
+  "updated_at": "2026-08-29T09:00:00Z"
+}

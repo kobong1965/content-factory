@@ -1,0 +1,51 @@
+{
+  "schema_version": "1.0.0",
+  "fixture_data": true,
+  "task_id": "shooting_task_demo_001",
+  "script_id": "script_demo_001",
+  "script_revision": 1,
+  "product_id": "product_demo_001",
+  "status": "materials_uploaded",
+  "requirements": [
+    {
+      "script_shot_id": "script_shot_demo_a1",
+      "version_id": "version_demo_a",
+      "order": 1,
+      "requirement_status": "required",
+      "purpose": "hook",
+      "visual": "模特正面站立后切到面料近景",
+      "voiceover": "一件夹克精神不精神，先看肩线，再近看面料纹理。",
+      "match_status": "confirmed",
+      "suggestions": [{ "material_id": "material_demo_001", "clip_id": "clip_demo_001", "score": 92, "repeat_risk": "low", "reason": "同商品、用途和画面标签匹配" }],
+      "confirmed_match": { "material_id": "material_demo_001", "clip_id": "clip_demo_001", "score": 92, "repeat_risk": "low", "reason": "人工确认" }
+    },
+    {
+      "script_shot_id": "script_shot_demo_b1",
+      "version_id": "version_demo_b",
+      "order": 1,
+      "requirement_status": "required",
+      "purpose": "detail",
+      "visual": "面料纹理占满画面",
+      "voiceover": "近看纹理，细节更直观。",
+      "match_status": "suggested",
+      "suggestions": [{ "material_id": "material_demo_001", "clip_id": "clip_demo_002", "score": 88, "repeat_risk": "low", "reason": "同商品且细节用途匹配" }],
+      "confirmed_match": null
+    },
+    {
+      "script_shot_id": "script_shot_demo_c1",
+      "version_id": "version_demo_c",
+      "order": 1,
+      "requirement_status": "required",
+      "purpose": "proof",
+      "visual": "通勤场景完整展示",
+      "voiceover": "从出门到通勤都保持利落。",
+      "match_status": "missing",
+      "suggestions": [],
+      "confirmed_match": null
+    }
+  ],
+  "missing_count": 2,
+  "matched_count": 1,
+  "created_at": "2026-08-29T09:05:00Z",
+  "updated_at": "2026-08-29T09:10:00Z"
+}

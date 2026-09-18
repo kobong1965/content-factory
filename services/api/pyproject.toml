@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=80"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "content-factory-api"
+version = "0.1.0"
+description = "爆款内容工厂业务 API"
+requires-python = ">=3.11"
+dependencies = [
+    "content-factory-contracts==0.1.0",
+    "content-factory-media==0.1.0",
+    "fastapi==0.141.1",
+    "python-multipart==0.0.32",
+    "uvicorn[standard]==0.52.4",
+    "cryptography==46.0.5",
+]
+
+[project.optional-dependencies]
+dev = [
+    "httpx2==2.12.0",
+    "pytest==9.1.1",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

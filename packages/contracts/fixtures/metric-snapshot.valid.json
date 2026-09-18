@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0.0",
+  "fixture_data": true,
+  "snapshot_id": "metric_snapshot_demo_001",
+  "publication_id": "publication_demo_001",
+  "captured_at": "2026-08-31T01:00:00Z",
+  "observation_minutes": 1440,
+  "source": "manual",
+  "confidence": "confirmed",
+  "confirmed_by": "运营甲",
+  "confirmed_at": "2026-08-31T01:02:00Z",
+  "is_correction": false,
+  "correction_reason": null,
+  "metrics": {
+    "views": 12800,
+    "followers_gained": 86,
+    "likes": 920,
+    "comments": 74,
+    "favorites": 188,
+    "shares": 96,
+    "product_clicks": 540,
+    "orders": 31,
+    "gmv_cents": 928000,
+    "retention_3s": 0.64,
+    "completion_rate": 0.31,
+    "product_ctr": 0.0422,
+    "conversion_rate": 0.0574
+  },
+  "created_at": "2026-08-31T01:02:00Z"
+}

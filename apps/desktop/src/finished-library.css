@@ -1,0 +1,25 @@
+.finished-filters { display:flex; flex-wrap:wrap; gap:12px; margin-block:16px 24px; }
+.finished-filters [aria-pressed="true"] { color:var(--color-text, #182332); border-color:currentColor; background:#edf1f5; }
+.finished-group { margin-block:24px 32px; }
+.finished-group h2 { display:flex; flex-wrap:wrap; align-items:baseline; gap:12px; overflow-wrap:anywhere; }
+.finished-group h2 span { font-size:1rem; font-weight:400; }
+.finished-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr)); gap:24px; }
+.finished-item { min-width:0; border-bottom:1px solid #d3d9df; padding-bottom:24px; }
+.finished-item video { display:block; width:100%; max-height:450px; aspect-ratio:9/16; object-fit:contain; background:#15181b; border-radius:12px; }
+.finished-item h3 { font-size:1.125rem; margin-block:16px 8px; overflow-wrap:anywhere; }
+.finished-item p { overflow-wrap:anywhere; margin-block:8px; }
+.finished-empty { padding:24px; }
+.finished-library .asset-actions { display:flex; flex-wrap:wrap; gap:12px; align-items:center; }
+.editing-view-switch [aria-pressed="true"] { background:#fff0f4; color:#9d1747; border-color:#bd1e52; font-weight:600; }
+.library-toolbar { display:flex; flex-wrap:wrap; align-items:center; gap:12px; margin:16px 0; }
+.library-toolbar input:not([type="checkbox"]),.library-toolbar select,.library-inline-editor input { min-height:44px; min-width:0; max-width:100%; padding:8px 12px; border:1px solid var(--line); border-radius:6px; background:var(--surface,#fff); color:inherit; font:inherit; }
+.library-toolbar label,.library-selection { display:flex; align-items:center; gap:8px; }
+.finished-library input[type="checkbox"] { width:18px; height:18px; accent-color:var(--primary); }
+.library-folder-card { padding:16px; background:var(--surface,#fff); border:1px solid var(--line); border-radius:8px; min-width:0; }
+.library-folder-card .batch-folder { border:0; padding:16px 0; min-height:96px; width:100%; }
+.library-folder-card .asset-actions { gap:8px; }
+.library-selection { font-size:var(--font-assist,14px); color:var(--text-secondary); margin-bottom:8px; }
+.library-inline-editor { display:flex; align-items:end; flex-wrap:wrap; gap:12px; padding:16px; margin-bottom:16px; background:var(--surface,#fff); border:1px solid var(--line); border-radius:8px; }
+.library-inline-editor label { display:grid; gap:8px; flex:1 1 220px; }
+.library-inline-editor p { flex:1 1 280px; margin:0; }
+.danger-text { color:var(--danger,#b42318); }

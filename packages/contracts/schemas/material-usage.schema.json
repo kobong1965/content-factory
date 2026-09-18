@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atai.local/schemas/material-usage/1.0.0",
+  "title": "爆款内容工厂素材使用事件",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "event_id", "action", "material_id", "clip_id", "script_id", "script_shot_id", "actor", "created_at"],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "event_id": { "$ref": "#/$defs/id" },
+    "action": { "enum": ["confirmed", "released"] },
+    "material_id": { "$ref": "#/$defs/id" },
+    "clip_id": { "$ref": "#/$defs/id" },
+    "script_id": { "$ref": "#/$defs/id" },
+    "script_shot_id": { "$ref": "#/$defs/id" },
+    "actor": { "type": "string", "minLength": 1, "maxLength": 100 },
+    "created_at": { "type": "string", "format": "date-time" }
+  },
+  "$defs": { "id": { "type": "string", "pattern": "^[a-z][a-z0-9_-]{2,63}$" } }
+}

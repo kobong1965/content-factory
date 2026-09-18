@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atai.local/schemas/gold-set-case/1.0.0",
+  "title": "Gold Set Case",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "fixture_data",
+    "case_id",
+    "video_slot_id",
+    "product_slot_ids",
+    "video_type",
+    "data_quality",
+    "source_info",
+    "annotation_status",
+    "analysis_file",
+    "product_files",
+    "script_file",
+    "annotator",
+    "reviewer",
+    "required_annotations",
+    "accepted_at"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "fixture_data": { "type": "boolean" },
+    "case_id": { "type": "string", "pattern": "^case_[a-z0-9_-]+$" },
+    "video_slot_id": { "type": "string", "pattern": "^video_[a-z0-9_-]+$" },
+    "product_slot_ids": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^product_[a-z0-9_-]+$" }
+    },
+    "video_type": {
+      "enum": ["product_seeding", "direct_conversion", "talking_review", "competitor_brand"]
+    },
+    "data_quality": { "enum": ["good", "medium", "poor"] },
+    "source_info": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_type", "source_uri", "local_path", "source_author", "authorization_status"],
+      "properties": {
+        "source_type": { "enum": ["douyin_link", "local_file", "authorized_api"] },
+        "source_uri": { "type": ["string", "null"] },
+        "local_path": { "type": ["string", "null"] },
+        "source_author": { "type": ["string", "null"] },
+        "authorization_status": { "enum": ["public", "authorized", "internal"] }
+      }
+    },
+    "annotation_status": {
+      "enum": ["pending_source", "ready_for_annotation", "annotating", "accepted", "rejected"]
+    },
+    "analysis_file": { "type": ["string", "null"] },
+    "product_files": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string" }
+    },
+    "script_file": { "type": ["string", "null"] },
+    "annotator": { "type": ["string", "null"] },
+    "reviewer": { "type": ["string", "null"] },
+    "required_annotations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["transcript_complete", "shot_boundaries_complete", "evidence_complete", "script_complete"],
+      "properties": {
+        "transcript_complete": { "type": "boolean" },
+        "shot_boundaries_complete": { "type": "boolean" },
+        "evidence_complete": { "type": "boolean" },
+        "script_complete": { "type": "boolean" }
+      }
+    },
+    "accepted_at": { "type": ["string", "null"], "format": "date-time" }
+  }
+}

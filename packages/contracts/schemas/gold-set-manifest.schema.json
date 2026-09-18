@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atai.local/schemas/gold-set-manifest/1.0.0",
+  "title": "Gold Set Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "fixture_data",
+    "project_id",
+    "required_video_count",
+    "required_product_count",
+    "video_slots",
+    "product_slots"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "fixture_data": { "type": "boolean" },
+    "project_id": { "const": "content_factory_menswear" },
+    "required_video_count": { "const": 20 },
+    "required_product_count": { "type": "integer", "minimum": 3, "maximum": 5 },
+    "video_slots": {
+      "type": "array",
+      "minItems": 20,
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["slot_id", "case_file", "status"],
+        "properties": {
+          "slot_id": { "type": "string", "pattern": "^video_[a-z0-9_-]+$" },
+          "case_file": { "type": ["string", "null"] },
+          "status": { "enum": ["pending", "in_progress", "accepted", "rejected"] }
+        }
+      }
+    },
+    "product_slots": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["slot_id", "profile_file", "status"],
+        "properties": {
+          "slot_id": { "type": "string", "pattern": "^product_[a-z0-9_-]+$" },
+          "profile_file": { "type": ["string", "null"] },
+          "status": { "enum": ["pending", "in_progress", "accepted", "rejected"] }
+        }
+      }
+    }
+  }
+}

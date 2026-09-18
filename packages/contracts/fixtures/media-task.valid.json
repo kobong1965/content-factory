@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0.0",
+  "fixture_data": true,
+  "task_id": "media_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "status": "completed",
+  "progress": 100,
+  "current_step": "completed",
+  "source_name": "fixture.mp4",
+  "source_path": "C:\\fixtures\\fixture.mp4",
+  "workspace_path": "C:\\fixtures\\workspace",
+  "attempt_count": 1,
+  "max_attempts": 2,
+  "error": null,
+  "result_path": "C:\\fixtures\\workspace\\tasks\\media_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\result.json",
+  "created_at": "2026-08-29T06:00:00Z",
+  "updated_at": "2026-08-29T06:00:03Z"
+}

@@ -1,0 +1,29 @@
+{
+  "schema_version": "1.0.0",
+  "fixture_data": true,
+  "case_id": "case_demo_001",
+  "video_slot_id": "video_demo_001",
+  "product_slot_ids": ["product_demo_001"],
+  "video_type": "product_seeding",
+  "data_quality": "good",
+  "source_info": {
+    "source_type": "local_file",
+    "source_uri": null,
+    "local_path": "fixtures/demo-video.mp4",
+    "source_author": "fixture",
+    "authorization_status": "internal"
+  },
+  "annotation_status": "annotating",
+  "analysis_file": "analysis.valid.json",
+  "product_files": ["product.valid.json"],
+  "script_file": "script.valid.json",
+  "annotator": "fixture",
+  "reviewer": null,
+  "required_annotations": {
+    "transcript_complete": true,
+    "shot_boundaries_complete": true,
+    "evidence_complete": true,
+    "script_complete": true
+  },
+  "accepted_at": null
+}

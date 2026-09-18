@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atai.local/schemas/edit-audio-asset/1.0.0",
+  "title": "爆款内容工厂剪辑音频资产",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "fixture_data", "asset_id", "kind", "name", "original_name", "mime_type", "sha256", "size_bytes", "duration_ms", "sample_rate", "channels", "license_note", "imported_by", "created_at"],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "fixture_data": { "type": "boolean" },
+    "asset_id": { "$ref": "#/$defs/id" },
+    "kind": { "enum": ["bgm", "sound_effect"] },
+    "name": { "$ref": "#/$defs/text" },
+    "original_name": { "type": "string", "minLength": 1, "maxLength": 255 },
+    "mime_type": { "enum": ["audio/mpeg", "audio/wav", "audio/x-wav", "audio/mp4", "audio/aac", "audio/flac", "audio/ogg"] },
+    "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "size_bytes": { "type": "integer", "minimum": 1 },
+    "duration_ms": { "type": "integer", "minimum": 1 },
+    "sample_rate": { "type": "integer", "minimum": 8000, "maximum": 384000 },
+    "channels": { "type": "integer", "minimum": 1, "maximum": 8 },
+    "license_note": { "type": "string", "minLength": 2, "maxLength": 1000 },
+    "imported_by": { "$ref": "#/$defs/text" },
+    "created_at": { "type": "string", "format": "date-time" }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9_-]{2,63}$" },
+    "text": { "type": "string", "minLength": 1, "maxLength": 500 }
+  }
+}

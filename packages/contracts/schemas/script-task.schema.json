@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atai.local/schemas/script-task/1.0.0",
+  "title": "爆款内容工厂脚本生成任务",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "fixture_data", "task_id", "product_id", "product_revision",
+    "source_analysis_id", "source_analysis_revision", "pattern_id", "content_goal",
+    "target_audience", "version_count", "status", "progress", "current_step",
+    "attempt_count", "max_attempts", "input_ref", "result_ref", "script_id",
+    "error", "created_at", "updated_at"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "fixture_data": { "type": "boolean" },
+    "task_id": { "$ref": "#/$defs/id" },
+    "product_id": { "$ref": "#/$defs/id" },
+    "product_revision": { "type": "integer", "minimum": 1 },
+    "source_analysis_id": { "$ref": "#/$defs/id" },
+    "source_analysis_revision": { "type": "integer", "minimum": 1 },
+    "pattern_id": { "$ref": "#/$defs/id" },
+    "content_goal": { "enum": ["seeding", "conversion", "review", "brand"] },
+    "target_audience": { "type": "string", "minLength": 1, "maxLength": 500 },
+    "version_count": { "type": "integer", "minimum": 3, "maximum": 5 },
+    "status": { "enum": ["pending", "running", "retry_wait", "completed", "failed"] },
+    "progress": { "type": "integer", "minimum": 0, "maximum": 100 },
+    "current_step": { "enum": ["queued", "prepare", "gateway", "validate", "persist", "completed", "failed"] },
+    "attempt_count": { "type": "integer", "minimum": 0 },
+    "max_attempts": { "type": "integer", "minimum": 1, "maximum": 5 },
+    "input_ref": { "$ref": "#/$defs/id" },
+    "result_ref": { "type": ["string", "null"] },
+    "script_id": { "type": ["string", "null"] },
+    "error": { "type": ["string", "null"] },
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9_-]{2,63}$" }
+  }
+}

@@ -1,0 +1,82 @@
+const fs = require('node:fs/promises');
+const path = require('node:path');
+const {execFileSync} = require('node:child_process');
+const assert = require('node:assert/strict');
+const arg = name => process.argv[process.argv.indexOf(name) + 1];
+async function main() {
+  const output = path.resolve(arg('--output')), api = arg('--api-url');
+  assert.equal(new URL(api).port,'18767');
+  assert(output.startsWith(path.resolve('E:/Codex工作盘') + path.sep));
+  await fs.mkdir(output,{recursive:true});
+  const video=path.join(output,'source.mp4');
+  execFileSync('ffmpeg',['-v','error','-f','lavfi','-i','color=c=blue:s=360x640:r=25','-f','lavfi','-i','sine=frequency=440','-t','6','-c:v','libx264','-c:a','aac',video]);
+  execFileSync('ffmpeg',['-v','error','-i',video,'-frames:v','1',path.join(output,'cover.jpg')]);
+  await fs.writeFile(path.join(output,'sub.srt'),'1\n00:00:00,000 --> 00:00:01,800\n看清楚裤子的\n\n2\n00:00:01,800 --> 00:00:02,400\n尺码\n\n3\n00:00:03,000 --> 00:00:05,000\n再看腰头展示。\n');
+  const manifest={schema_version:1,id:'subtitle-qa',title:'字幕编辑真实渲染验收',analysis_summary:'合成色块和声音，仅用于编辑验收',candidates:[{id:'one',title:'字幕核听测试',source_path:video,source_start_ms:0,source_end_ms:6000,video_path:'source.mp4',subtitle_path:'sub.srt',cover_path:'cover.jpg',hook:'核听尺码',benchmark_refs:[],review_notes:[]}]};
+  const manifestPath=path.join(output,'manifest.json'); await fs.writeFile(manifestPath,JSON.stringify(manifest));
+  const imported=await fetch(api+'/s7/footage-batches/import',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({manifest_path:manifestPath})});assert(imported.ok,await imported.text());
+  const endpoint=api+'/s7/subtitle-editor/subtitle-qa/one';
+  const initial=await (await fetch(endpoint)).json();
+  // Deterministic acoustic fixture for UI timing only, not an ASR quality claim.
+  initial.document.cues[0].words=[{text:'看',start_ms:0,end_ms:130},{text:'清楚',start_ms:170,end_ms:500},{text:'裤子',start_ms:640,end_ms:1190},{text:'的',start_ms:1510,end_ms:1800}];
+  initial.document.cues[1].words=[{text:'尺码',start_ms:1800,end_ms:2400}];
+  initial.document.cues[2].words=[{text:'再看',start_ms:3000,end_ms:3300},{text:'腰头展示。',start_ms:3700,end_ms:5000}];
+  const seeded=await fetch(endpoint,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({revision:initial.revision,document:initial.document})});assert(seeded.ok,await seeded.text());
+  const {chromium}=require(arg('--playwright-module'));
+  const browser=await chromium.launch({channel:'chrome',headless:true});
+  const results=[],errors=[];
+  try {
+    const page=await browser.newPage({viewport:{width:1920,height:1080}});page.on('pageerror',e=>errors.push(e.message));
+    await page.goto(arg('--url'));
+    await page.getByRole('button',{name:'成片素材库',exact:true}).click();
+    await page.getByRole('button',{name:/.*审核.*/}).click();
+    await page.getByRole('button',{name:'编辑字幕与位置',exact:true}).click();
+    const editor=page.getByRole('region',{name:'字幕编辑',exact:true});
+    assert.equal(await editor.getByLabel('第1句字幕',{exact:true}).inputValue(),'看清楚裤子的');
+    await editor.getByRole('button',{name:'准备视频预览',exact:true}).click();
+    await page.waitForFunction(()=>document.querySelector('.subtitle-preview video')?.readyState>=2);
+    await editor.getByRole('button',{name:'听这一句',exact:true}).first().click();
+    await page.waitForFunction(()=>document.querySelector('.subtitle-preview video')?.currentTime>.1);
+    await page.waitForFunction(()=>{const v=document.querySelector('.subtitle-preview video');return v?.paused && v.currentTime>1.5;});
+    assert((await editor.locator('video').evaluate(v=>v.currentTime))<1.8,'按句播放不得停到下一句');
+    await editor.locator('video').evaluate(v=>v.pause());
+    await editor.locator('video').evaluate(v=>{v.currentTime=.3;});
+    await page.waitForFunction(()=>document.querySelector('.subtitle-preview-caption')?.textContent==='看清楚');
+    await editor.locator('video').evaluate(v=>{v.currentTime=.9;});
+    await page.waitForFunction(()=>document.querySelector('.subtitle-preview-caption')?.textContent==='看清楚裤子');
+    results.push('预览按不等间隔字词时间显示，不提前显示整段');
+    await editor.getByLabel('显示方式',{exact:true}).selectOption('sentence');
+    await editor.getByLabel('字幕垂直位置',{exact:true}).fill('72');
+    await editor.getByLabel('第1句字幕',{exact:true}).fill('下单前请看清裤长与尺码');
+    await page.waitForFunction(()=>document.querySelector('.subtitle-preview-caption')?.textContent==='下单前请看清裤长与尺码');
+    assert.equal(await editor.locator('.subtitle-preview-caption').evaluate(e=>e.style.top),'72%');
+    results.push('真实底片播放、原短句不再合并成长段、按句定位、整句模式修改与位置即时预览');
+    await page.route(endpoint,r=>r.request().method()==='PUT'?r.fulfill({status:503,json:{detail:'模拟保存失败'}}):r.continue());
+    await editor.getByRole('button',{name:'保存字幕草稿',exact:true}).click();await editor.getByRole('alert').filter({hasText:'模拟保存失败'}).waitFor();
+    assert.equal(await editor.getByLabel('第1句字幕',{exact:true}).inputValue(),'下单前请看清裤长与尺码');
+    await page.unroute(endpoint);
+    await editor.getByRole('button',{name:'保存字幕草稿',exact:true}).click();await editor.getByText('字幕草稿已保存，下次打开可继续编辑。',{exact:true}).waitFor();
+    const saved=await (await fetch(endpoint)).json();assert.equal(saved.document.y,72);assert.equal(saved.document.cues[0].text,'下单前请看清裤长与尺码');
+    for(const [width,height] of [[2560,1440],[1920,1080],[1536,864],[1280,720],[800,700]]) {
+      await page.setViewportSize({width,height});
+      await page.evaluate(()=>window.scrollTo(0,0));
+      assert(await editor.getByRole('button',{name:'保存字幕草稿',exact:true}).isVisible());
+      assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2));
+      await page.screenshot({path:path.join(output,`editor-${width}.png`),fullPage:true});
+    }
+    results.push('保存失败不清空、实际持久化、五种窗口布局无横向溢出（非真实系统缩放）');
+    await editor.getByRole('button',{name:'生成新版成片',exact:true}).click();
+    await editor.getByText(/新版已生成/).waitFor({timeout:60000});
+    const batches=(await (await fetch(api+'/s7/footage-batches')).json()).batches;
+    assert.equal(batches.length,2);assert.equal(batches[0].candidates[0].review_status,'pending');
+    const movie=await fetch(api+`/s7/footage-batches/${batches[0].id}/candidates/one/media/video`);assert(movie.ok);assert((await movie.arrayBuffer()).byteLength>1000);
+    await editor.getByRole('button',{name:'返回成片审核',exact:true}).click();
+    await page.getByRole('button',{name:'编辑字幕与位置',exact:true}).click();
+    assert.equal(await editor.getByLabel('第1句字幕',{exact:true}).inputValue(),'下单前请看清裤长与尺码');
+    assert.equal(await editor.getByLabel('字幕垂直位置',{exact:true}).inputValue(),'72');
+    results.push('真实FFmpeg新建待审核批次、可下载视频、返回重开草稿一致');
+    assert.deepEqual(errors,[]);
+    await fs.writeFile(path.join(output,'report.json'),JSON.stringify({results,errors},null,2));
+  } finally {await browser.close();}
+}
+main().catch(e=>{console.error(e);process.exitCode=1;});

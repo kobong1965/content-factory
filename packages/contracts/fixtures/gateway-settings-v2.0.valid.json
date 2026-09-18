@@ -1,0 +1,27 @@
+{
+  "schema_version": "2.0.0",
+  "base_url": "https://relay.example.com/v1",
+  "model": "legacy-vision-model",
+  "api_mode": "chat_completions",
+  "api_key_configured": true,
+  "default_model_id": "model_legacy",
+  "models": [
+    {
+      "model_id": "model_legacy",
+      "display_name": "旧版多模态模型",
+      "base_url": "https://relay.example.com/v1",
+      "model": "legacy-vision-model",
+      "api_mode": "chat_completions",
+      "modalities": ["text", "image"],
+      "purposes": ["analysis", "script", "material"],
+      "enabled": true,
+      "api_key_configured": true
+    }
+  ],
+  "routing": {
+    "analysis": "model_legacy",
+    "script": "model_legacy",
+    "material": "model_legacy"
+  },
+  "updated_at": "2026-08-31T08:00:00Z"
+}

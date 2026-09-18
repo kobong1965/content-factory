@@ -1,0 +1,127 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atai.local/schemas/product-profile/1.1.0",
+  "title": "爆款内容工厂商品档案",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "fixture_data", "revision", "product_id", "sku", "name", "category", "status",
+    "sources", "facts", "selling_point_fact_ids", "forbidden_expressions", "unprovable_claims",
+    "brand_boundary_confirmed_by", "brand_boundary_confirmed_at", "completeness", "shooting_constraints",
+    "created_at", "updated_at"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.1.0" },
+    "fixture_data": { "type": "boolean" },
+    "revision": { "type": "integer", "minimum": 1 },
+    "product_id": { "$ref": "#/$defs/id" },
+    "sku": { "type": "string", "minLength": 1, "maxLength": 64 },
+    "name": { "$ref": "#/$defs/nonEmptyText" },
+    "category": { "const": "mens_clothing" },
+    "status": { "enum": ["draft", "active", "archived"] },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "kind", "label", "source_ref", "asset_id", "mime_type", "sha256", "size_bytes", "managed"],
+        "properties": {
+          "id": { "$ref": "#/$defs/id" },
+          "kind": { "enum": ["detail_page", "image", "video", "document"] },
+          "label": { "$ref": "#/$defs/nonEmptyText" },
+          "source_ref": { "$ref": "#/$defs/nonEmptyText" },
+          "asset_id": { "anyOf": [{ "$ref": "#/$defs/id" }, { "type": "null" }] },
+          "mime_type": { "type": ["string", "null"] },
+          "sha256": { "anyOf": [{ "type": "string", "pattern": "^[a-f0-9]{64}$" }, { "type": "null" }] },
+          "size_bytes": { "type": ["integer", "null"], "minimum": 0 },
+          "managed": { "type": "boolean" }
+        }
+      }
+    },
+    "facts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "field", "label", "value", "unit", "source_type", "source_id", "source_ref", "confirmed_by", "confirmed_at"],
+        "properties": {
+          "id": { "$ref": "#/$defs/id" },
+          "field": { "enum": ["fabric", "fit", "size", "color", "price", "activity", "feature", "care", "other"] },
+          "label": { "$ref": "#/$defs/nonEmptyText" },
+          "value": { "$ref": "#/$defs/nonEmptyText" },
+          "unit": { "type": ["string", "null"] },
+          "source_type": { "enum": ["official_detail_page", "supplier_document", "manual_confirmed", "media_evidence"] },
+          "source_id": { "anyOf": [{ "$ref": "#/$defs/id" }, { "type": "null" }] },
+          "source_ref": { "$ref": "#/$defs/nonEmptyText" },
+          "confirmed_by": { "$ref": "#/$defs/nonEmptyText" },
+          "confirmed_at": { "type": "string", "format": "date-time" }
+        }
+      }
+    },
+    "selling_point_fact_ids": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/id" },
+      "uniqueItems": true
+    },
+    "forbidden_expressions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/nonEmptyText" },
+      "uniqueItems": true
+    },
+    "unprovable_claims": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/nonEmptyText" },
+      "uniqueItems": true
+    },
+    "brand_boundary_confirmed_by": { "type": ["string", "null"] },
+    "brand_boundary_confirmed_at": { "anyOf": [{ "type": "string", "format": "date-time" }, { "type": "null" }] },
+    "completeness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required_fields", "completed_fields", "ratio", "missing_fields"],
+      "properties": {
+        "required_fields": { "const": 10 },
+        "completed_fields": { "type": "integer", "minimum": 0, "maximum": 10 },
+        "ratio": { "type": "number", "minimum": 0, "maximum": 1 },
+        "missing_fields": {
+          "type": "array",
+          "items": { "enum": ["商品名称", "资料来源", "面料", "版型", "尺码", "颜色", "价格", "核心卖点", "品牌边界", "拍摄条件"] },
+          "uniqueItems": true
+        }
+      }
+    },
+    "shooting_constraints": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "models", "locations", "equipment", "lights", "daily_available_minutes", "budget_cny",
+        "reusable_assets_allowed", "brand_tone", "required_disclosures", "max_duration_ms", "confirmed_by", "confirmed_at"
+      ],
+      "properties": {
+        "models": { "$ref": "#/$defs/textArray" },
+        "locations": { "$ref": "#/$defs/textArray" },
+        "equipment": { "$ref": "#/$defs/textArray" },
+        "lights": { "$ref": "#/$defs/textArray" },
+        "daily_available_minutes": { "type": "integer", "minimum": 0 },
+        "budget_cny": { "type": "number", "minimum": 0 },
+        "reusable_assets_allowed": { "type": "boolean" },
+        "brand_tone": { "type": "string" },
+        "required_disclosures": { "type": "array", "items": { "$ref": "#/$defs/nonEmptyText" }, "uniqueItems": true },
+        "max_duration_ms": { "type": "integer", "minimum": 0 },
+        "confirmed_by": { "type": ["string", "null"] },
+        "confirmed_at": { "anyOf": [{ "type": "string", "format": "date-time" }, { "type": "null" }] }
+      }
+    },
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9_-]{2,63}$" },
+    "nonEmptyText": { "type": "string", "minLength": 1 },
+    "textArray": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/nonEmptyText" },
+      "uniqueItems": true
+    }
+  }
+}

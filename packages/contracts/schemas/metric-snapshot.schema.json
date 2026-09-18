@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://content-factory.local/schemas/metric-snapshot.schema.json",
+  "title": "S8 publication metric snapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "fixture_data", "snapshot_id", "publication_id", "captured_at", "observation_minutes", "source", "confidence", "confirmed_by", "confirmed_at", "is_correction", "correction_reason", "metrics", "created_at"],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "fixture_data": {"type": "boolean"},
+    "snapshot_id": {"type": "string", "pattern": "^metric_snapshot_[A-Za-z0-9_-]{6,80}$"},
+    "publication_id": {"type": "string", "pattern": "^publication_[A-Za-z0-9_-]{6,80}$"},
+    "captured_at": {"type": "string", "format": "date-time"},
+    "observation_minutes": {"type": "integer", "minimum": 0, "maximum": 5256000},
+    "source": {"enum": ["manual", "csv", "screenshot_ocr", "authorized_api"]},
+    "confidence": {"enum": ["confirmed", "estimated", "unconfirmed"]},
+    "confirmed_by": {"type": "string", "minLength": 1, "maxLength": 100},
+    "confirmed_at": {"type": "string", "format": "date-time"},
+    "is_correction": {"type": "boolean"},
+    "correction_reason": {"type": ["string", "null"], "maxLength": 500},
+    "metrics": {"$ref": "#/$defs/metrics"},
+    "created_at": {"type": "string", "format": "date-time"}
+  },
+  "$defs": {
+    "metrics": {
+      "type": "object", "additionalProperties": false, "minProperties": 1,
+      "properties": {
+        "views": {"type": "integer", "minimum": 0},
+        "followers_gained": {"type": "integer", "minimum": 0},
+        "likes": {"type": "integer", "minimum": 0},
+        "comments": {"type": "integer", "minimum": 0},
+        "favorites": {"type": "integer", "minimum": 0},
+        "shares": {"type": "integer", "minimum": 0},
+        "product_clicks": {"type": "integer", "minimum": 0},
+        "orders": {"type": "integer", "minimum": 0},
+        "gmv_cents": {"type": "integer", "minimum": 0},
+        "retention_3s": {"type": "number", "minimum": 0, "maximum": 1},
+        "completion_rate": {"type": "number", "minimum": 0, "maximum": 1},
+        "product_ctr": {"type": "number", "minimum": 0, "maximum": 1},
+        "conversion_rate": {"type": "number", "minimum": 0, "maximum": 1}
+      }
+    }
+  }
+}

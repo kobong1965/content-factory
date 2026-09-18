@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=80"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "content-factory-media"
+version = "0.1.0"
+description = "爆款内容工厂本地媒体处理工作器"
+requires-python = ">=3.11"
+dependencies = [
+    "content-factory-contracts==0.1.0",
+    "onnxruntime==1.23.2",
+    "rapidocr==3.9.2",
+]
+
+[project.optional-dependencies]
+dev = ["pytest==9.1.1"]
+
+[project.scripts]
+content-factory-media = "content_factory_media.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

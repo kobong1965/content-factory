@@ -1,0 +1,11 @@
+{
+  "schema_version": "1.0.0",
+  "event_id": "usage_event_demo_001",
+  "action": "confirmed",
+  "material_id": "material_demo_001",
+  "clip_id": "clip_demo_001",
+  "script_id": "script_demo_001",
+  "script_shot_id": "script_shot_demo_a1",
+  "actor": "工程验收",
+  "created_at": "2026-08-29T09:10:00Z"
+}

@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atai.local/schemas/edit-project/1.0.0",
+  "title": "爆款内容工厂剪辑工程",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "fixture_data", "revision", "project_id", "script_id", "script_revision", "product_id", "status", "settings", "variants", "created_at", "updated_at"],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "fixture_data": { "type": "boolean" },
+    "revision": { "type": "integer", "minimum": 1 },
+    "project_id": { "$ref": "#/$defs/id" },
+    "script_id": { "$ref": "#/$defs/id" },
+    "script_revision": { "type": "integer", "minimum": 1 },
+    "selected_version_id": { "$ref": "#/$defs/id" },
+    "product_id": { "$ref": "#/$defs/id" },
+    "status": { "enum": ["draft", "video_review", "approved", "rejected"] },
+    "settings": { "$ref": "#/$defs/settings" },
+    "variants": { "type": "array", "minItems": 1, "maxItems": 5, "items": { "$ref": "#/$defs/variant" } },
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9_-]{2,63}$" },
+    "text": { "type": "string", "minLength": 1, "maxLength": 500 },
+    "settings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["width", "height", "fps", "video_codec", "audio_codec", "color_preset", "normalize_voice", "reduce_noise", "auto_sound_effects", "original_volume", "bgm_asset_id", "bgm_volume", "output_clean_copy", "subtitle_style"],
+      "properties": {
+        "width": { "const": 1080 },
+        "height": { "const": 1920 },
+        "fps": { "const": 30 },
+        "video_codec": { "const": "h264" },
+        "audio_codec": { "const": "aac" },
+        "color_preset": { "enum": ["natural", "bright", "warm", "cool"] },
+        "normalize_voice": { "type": "boolean" },
+        "reduce_noise": { "type": "boolean" },
+        "auto_sound_effects": { "type": "boolean" },
+        "original_volume": { "type": "number", "minimum": 0, "maximum": 2 },
+        "bgm_asset_id": { "type": ["string", "null"] },
+        "bgm_volume": { "type": "number", "minimum": 0, "maximum": 1 },
+        "output_clean_copy": { "const": true },
+        "subtitle_style": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["enabled", "font_family", "font_size", "primary_color", "outline_color", "margin_v"],
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "font_family": { "$ref": "#/$defs/text" },
+            "font_size": { "type": "integer", "minimum": 28, "maximum": 96 },
+            "primary_color": { "type": "string", "pattern": "^#[A-Fa-f0-9]{6}$" },
+            "outline_color": { "type": "string", "pattern": "^#[A-Fa-f0-9]{6}$" },
+            "margin_v": { "type": "integer", "minimum": 40, "maximum": 600 }
+          }
+        }
+      }
+    },
+    "variant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "script_version_id", "name", "duration_ms", "clips", "warnings", "latest_output_id"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "script_version_id": { "$ref": "#/$defs/id" },
+        "name": { "$ref": "#/$defs/text" },
+        "duration_ms": { "type": "integer", "minimum": 500, "maximum": 600000 },
+        "clips": { "type": "array", "minItems": 1, "maxItems": 300, "items": { "$ref": "#/$defs/clip" } },
+        "warnings": { "type": "array", "maxItems": 100, "items": { "type": "string", "minLength": 1, "maxLength": 500 } },
+        "latest_output_id": { "type": ["string", "null"] }
+      }
+    },
+    "clip": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "order", "script_shot_id", "material_id", "material_clip_id", "source_start_ms", "source_end_ms", "timeline_start_ms", "timeline_end_ms", "speed", "crop_mode", "focus_x", "focus_y", "transition", "transition_ms", "subtitle", "voiceover", "sound_effect", "has_source_audio", "original_volume", "note"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "order": { "type": "integer", "minimum": 1 },
+        "script_shot_id": { "$ref": "#/$defs/id" },
+        "material_id": { "$ref": "#/$defs/id" },
+        "material_clip_id": { "$ref": "#/$defs/id" },
+        "source_start_ms": { "type": "integer", "minimum": 0 },
+        "source_end_ms": { "type": "integer", "minimum": 1 },
+        "timeline_start_ms": { "type": "integer", "minimum": 0 },
+        "timeline_end_ms": { "type": "integer", "minimum": 1 },
+        "speed": { "type": "number", "minimum": 0.5, "maximum": 2 },
+        "crop_mode": { "enum": ["fill", "fit"] },
+        "focus_x": { "type": "number", "minimum": 0, "maximum": 1 },
+        "focus_y": { "type": "number", "minimum": 0, "maximum": 1 },
+        "transition": { "enum": ["cut", "fade"] },
+        "transition_ms": { "type": "integer", "minimum": 0, "maximum": 500 },
+        "subtitle": { "type": "string", "maxLength": 1000 },
+        "voiceover": { "type": "string", "maxLength": 2000 },
+        "sound_effect": { "type": "string", "maxLength": 200 },
+        "has_source_audio": { "type": "boolean" },
+        "original_volume": { "type": "number", "minimum": 0, "maximum": 2 },
+        "note": { "type": "string", "maxLength": 2000 },
+        "continuous_take": { "type": "boolean" },
+        "visual_overlay": { "$ref": "#/$defs/visualOverlay" }
+      }
+    },
+    "visualOverlay": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["material_id", "material_clip_id", "source_start_ms", "source_end_ms", "speed", "detail_tag", "instruction", "audio_mode"],
+      "properties": {
+        "material_id": { "$ref": "#/$defs/id" },
+        "material_clip_id": { "$ref": "#/$defs/id" },
+        "source_start_ms": { "type": "integer", "minimum": 0 },
+        "source_end_ms": { "type": "integer", "minimum": 1 },
+        "speed": { "type": "number", "minimum": 0.5, "maximum": 2 },
+        "detail_tag": { "$ref": "#/$defs/text" },
+        "instruction": { "type": "string", "minLength": 1, "maxLength": 2000 },
+        "audio_mode": { "const": "retain_primary" }
+      }
+    }
+  }
+}

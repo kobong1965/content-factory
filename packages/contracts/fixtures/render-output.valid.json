@@ -1,0 +1,40 @@
+{
+  "schema_version": "1.0.0",
+  "fixture_data": true,
+  "output_id": "render_output_demo_001",
+  "project_id": "edit_project_demo_001",
+  "project_revision": 1,
+  "variant_id": "edit_variant_demo_a",
+  "status": "video_review",
+  "resources": {
+    "video_ref": "render_video_demo_001",
+    "clean_video_ref": "render_clean_demo_001",
+    "subtitle_ref": "render_subtitle_demo_001",
+    "project_ref": "render_project_demo_001",
+    "jianying_package_ref": "render_jianying_demo_001",
+    "jianying_experimental": true
+  },
+  "media": {
+    "filename": "肩线判断版.mp4",
+    "mime_type": "video/mp4",
+    "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "size_bytes": 81000,
+    "duration_ms": 6000,
+    "width": 1080,
+    "height": 1920,
+    "fps": 30,
+    "video_codec": "h264",
+    "audio_codec": "aac",
+    "has_audio": true,
+    "faststart": true
+  },
+  "render": {
+    "task_id": "render_task_demo_001",
+    "ffmpeg_version": "ffmpeg fixture 8.1",
+    "rendered_at": "2026-08-29T12:06:00Z",
+    "duration_ms": 60000
+  },
+  "review": { "status": "pending", "reviewed_by": null, "reviewed_at": null, "note": null },
+  "created_at": "2026-08-29T12:06:00Z",
+  "updated_at": "2026-08-29T12:06:00Z"
+}

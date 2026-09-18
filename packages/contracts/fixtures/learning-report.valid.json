@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0.0",
+  "fixture_data": true,
+  "report_id": "learning_report_demo_001",
+  "product_id": "product_demo_001",
+  "status": "ready",
+  "primary_metric": "product_ctr",
+  "target_window_minutes": 1440,
+  "publication_ids": ["publication_demo_001", "publication_demo_002"],
+  "comparison": [
+    {"publication_id": "publication_demo_001", "snapshot_id": "metric_snapshot_demo_001", "variant_id": "edit_variant_demo_a", "observation_minutes": 1440, "value": 0.0422, "views": 12800, "engagement_per_1000": 99.84},
+    {"publication_id": "publication_demo_002", "snapshot_id": "metric_snapshot_demo_002", "variant_id": "edit_variant_demo_b", "observation_minutes": 1420, "value": 0.031, "views": 11900, "engagement_per_1000": 84.2}
+  ],
+  "winner_publication_id": "publication_demo_001",
+  "observations": ["在约 24 小时观察窗口内，肩线判断版的商品点击率高于细节开场版。"],
+  "evidence": [{"publication_id": "publication_demo_001", "snapshot_id": "metric_snapshot_demo_001", "statement": "24 小时商品点击率为 4.22%，播放量为 12800。"}],
+  "limitations": ["只有两个工程样例版本，当前结果只能用于验证计算链路，不能作为真实业务结论。"],
+  "next_tests": ["下一条保持商品和发布时间接近，只替换前三秒开场，继续观察 24 小时商品点击率。"],
+  "generated_at": "2026-08-31T01:10:00Z"
+}

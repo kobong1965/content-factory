@@ -1,0 +1,122 @@
+{
+  "schema_version": "1.0.0",
+  "skill_id": "skill_11111111111111111111111111111111",
+  "origin_candidate_id": "candidate_22222222222222222222222222222222",
+  "based_on_candidate_revision": 2,
+  "revision": 1,
+  "status": "approved",
+  "reuse_mode": "reuse",
+  "name": "结果先行配合细节证明",
+  "mechanism": "先展示上身结果，再用固定机位动作或同款细节画面补充可信证据。",
+  "classification": "common_candidate",
+  "evidence_level": "content_inference",
+  "causality_status": "not_established",
+  "distinct_video_count": 2,
+  "occurrence_count": 2,
+  "representative_occurrence_id": "occurrence_33333333333333333333333333333333",
+  "steps": [
+    { "order": 1, "description": "开场先说清上身结果" },
+    { "order": 2, "description": "用商品动作或同款细节补证" }
+  ],
+  "necessary_conditions": ["商品结果必须能由画面或动作支持"],
+  "failure_signals": ["只有抽象形容词，没有可见证明"],
+  "occurrences": [
+    {
+      "occurrence_id": "occurrence_33333333333333333333333333333333",
+      "analysis_task_id": "analysis_task_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "media_task_id": "media_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "analysis_id": "analysis_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "analysis_revision": 2,
+      "report_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "video_id": "video_aaaaaaaaaaaaaaaaaaaaaaaa",
+      "source_id": "source_aaaaaaaaaaaaaaaaaaaaaaaa",
+      "source_type": "local_file",
+      "source_name": "主播长镜头-A.mp4",
+      "pattern_id": "pattern_aaaaaaaaaaaaaaaaaaaaaaaa",
+      "pattern_name": "结果先行配合细节证明",
+      "pattern_mechanism": "先展示上身结果，再用动作补证。",
+      "accepted_by": "分析审核人",
+      "accepted_at": "2026-09-07T08:00:00Z",
+      "start_ms": 0,
+      "end_ms": 2500,
+      "has_primary_evidence": true,
+      "steps": [
+        {
+          "order": 1,
+          "description": "开场先说清上身结果",
+          "evidence": [
+            {
+              "evidence_id": "evidence_aaaaaaaaaaaaaaaaaaaaaaaa",
+              "qualified_evidence_id": "analysis_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:evidence_aaaaaaaaaaaaaaaaaaaaaaaa",
+              "claim": "主播开场先给出穿着结果",
+              "source_type": "shot",
+              "source_id": "shot_aaaaaaaaaaaaaaaaaaaaaaaa",
+              "start_ms": 0,
+              "end_ms": 2500,
+              "confidence": 0.9,
+              "is_inference": false,
+              "exact_dialogue": "你看这条裤子上身就是利落。",
+              "subtitle": "上身利落",
+              "action": "主播提起裤腰并展示裤型",
+              "visual_event": "固定机位内展示整条裤型",
+              "metric_values": null,
+              "comment_text": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "occurrence_id": "occurrence_44444444444444444444444444444444",
+      "analysis_task_id": "analysis_task_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "media_task_id": "media_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "analysis_id": "analysis_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "analysis_revision": 3,
+      "report_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "video_id": "video_bbbbbbbbbbbbbbbbbbbbbbbb",
+      "source_id": "source_bbbbbbbbbbbbbbbbbbbbbbbb",
+      "source_type": "local_file",
+      "source_name": "主播长镜头-B.mp4",
+      "pattern_id": "pattern_bbbbbbbbbbbbbbbbbbbbbbbb",
+      "pattern_name": "先结果后证明",
+      "pattern_mechanism": "先说明版型结果，再展示面料和裤型。",
+      "accepted_by": "分析审核人",
+      "accepted_at": "2026-09-07T08:30:00Z",
+      "start_ms": 1000,
+      "end_ms": 4200,
+      "has_primary_evidence": true,
+      "steps": [
+        {
+          "order": 1,
+          "description": "先说明版型结果",
+          "evidence": [
+            {
+              "evidence_id": "evidence_bbbbbbbbbbbbbbbbbbbbbbbb",
+              "qualified_evidence_id": "analysis_bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb:evidence_bbbbbbbbbbbbbbbbbbbbbbbb",
+              "claim": "口播和商品动作在同一时间段出现",
+              "source_type": "timeline",
+              "source_id": "timeline_bbbbbbbbbbbbbbbbbbbbbbbb",
+              "start_ms": 1000,
+              "end_ms": 4200,
+              "confidence": 0.88,
+              "is_inference": true,
+              "exact_dialogue": "腰头顺，裤腿也不会堆。",
+              "subtitle": "裤腿不堆",
+              "action": "主播顺着裤腿向下捋",
+              "visual_event": "主播在固定机位内展示裤腿",
+              "metric_values": null,
+              "comment_text": null
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "review": {
+    "reviewer": "内容负责人",
+    "reviewed_at": "2026-09-07T09:00:00Z",
+    "note": "可用于固定直播间脚本"
+  },
+  "created_at": "2026-09-07T09:00:00Z",
+  "updated_at": "2026-09-07T09:00:00Z"
+}

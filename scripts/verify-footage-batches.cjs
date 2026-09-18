@@ -1,0 +1,137 @@
+// Real six-video playback; all review writes use the isolated QA service.
+const assert = require('node:assert/strict');
+const fs = require('node:fs/promises');
+const path = require('node:path');
+const args = process.argv.slice(2), arg = n => args[args.indexOf(n) + 1];
+const api = arg('--api-url'), url = arg('--url'), output = path.resolve(arg('--output'));
+assert.equal(new URL(api).port, '18767');
+assert(output.startsWith(path.resolve('E:/Codex工作盘') + path.sep));
+const { chromium } = require(arg('--playwright-module'));
+const manifest = 'E:/Codex工作盘/artifacts/latest/千川对标剪辑-20260915-字幕新版/batch.json';
+const results = [], errors = [];
+const base = `${api}/s7/footage-batches`;
+async function saved() { const r = await fetch(base); assert(r.ok); return (await r.json()).batches[0]; }
+(async () => {
+  await fs.mkdir(output, { recursive: true });
+  const browser = await chromium.launch({ channel: 'chrome', headless: true });
+  const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
+  page.on('pageerror', e => errors.push(e.message));
+  try {
+    await page.goto(url);
+    await page.getByRole('button', { name: '后期剪辑', exact: true }).click();
+    const panel = page.getByRole('region', { name: '实拍剪辑批次' });
+    await panel.getByText(/还没有实拍剪辑批次/).waitFor();
+    await panel.getByText('导入已有剪辑批次', { exact: true }).click();
+    await panel.getByLabel('批次文件路径', { exact: true }).fill(manifest);
+    await panel.getByRole('button', { name: '导入并检查' }).click();
+    await panel.getByText('批次已导入，原有审核记录保留。').waitFor({ timeout: 30000 });
+    assert.equal((await saved()).candidates.length, 6);
+    results.push({ case: 'real six-video batch imported through UI into isolated SQLite', passed: true });
+    const choices = panel.locator('.footage-version-list button');
+    for (let i = 0; i < 6; i++) {
+      await choices.nth(i).click();
+      await page.waitForFunction(() => { const v=document.querySelector('.footage-player > video'); return v?.readyState >= 2 && v.videoWidth === 1080 && v.videoHeight === 1920; }, null, { timeout: 30000 });
+      await panel.locator('.footage-player > video').evaluate(async v => { v.muted=true; await v.play(); });
+      await page.waitForFunction(() => document.querySelector('.footage-player > video')?.currentTime > .2);
+      await panel.locator('.footage-player > video').evaluate(v => v.pause());
+    }
+    results.push({ case: 'all six actual outputs decode and advance in Chrome at 1080x1920', passed: true });
+    await choices.nth(2).click();
+    await panel.getByRole('button', { name: '回看此刻原片' }).click();
+    await page.waitForFunction(() => { const v=document.querySelector('.footage-original video'); return v?.readyState >= 2 && Math.abs(v.currentTime-233.2)<.2; }, null, { timeout: 30000 });
+    assert(await panel.locator('.footage-player > video').evaluate(v => v.paused));
+    await panel.getByRole('button', { name: '收起原片' }).click();
+    results.push({ case: 'output time maps back to real source 233.20s without simultaneous audio', passed: true });
+    const note = panel.getByLabel('审核意见', { exact: true });
+    await note.fill('QA：第 3 秒字幕需听审，先保留。');
+    await page.route(`${base}/*/candidates/*/review`, route => route.fulfill({ status: 503, json: { detail: 'QA 模拟保存失败' } }));
+    await panel.getByRole('button', { name: '保存意见 · 待审核' }).click();
+    await panel.getByText('QA 模拟保存失败').waitFor();
+    assert.equal(await note.inputValue(), 'QA：第 3 秒字幕需听审，先保留。');
+    assert.equal((await saved()).candidates[2].review_note, '');
+    await page.unroute(`${base}/*/candidates/*/review`);
+    await panel.getByRole('button', { name: '标记需要修改' }).click();
+    await panel.getByText('审核已保存，重新打开仍可继续查看。').waitFor();
+    assert.equal((await saved()).candidates[2].review_status, 'changes_requested');
+    await page.reload(); await page.getByRole('button', { name: '后期剪辑', exact: true }).click();
+    await choices.nth(2).click();
+    assert.equal(await note.inputValue(), 'QA：第 3 秒字幕需听审，先保留。');
+    results.push({ case: 'failed review keeps text, retry saves actual status, reload preserves notes', passed: true });
+    await note.fill('QA：未保存意见不能被刷新覆盖');
+    const snapshot = await saved();
+    const concurrent = await fetch(`${base}/${snapshot.id}/candidates/03/review`, { method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({revision:snapshot.revision,status:'pending',note:'另一窗口更新',reviewed_by:'QA'}) });
+    assert(concurrent.ok);
+    await panel.getByRole('button', { name: '保存意见 · 待审核' }).click();
+    await panel.getByRole('alert').filter({ hasText: '其他窗口已更新审核' }).waitFor();
+    await panel.getByRole('button', { name: '刷新批次' }).click();
+    await panel.getByText(/已刷新批次/).waitFor();
+    assert.equal(await note.inputValue(), 'QA：未保存意见不能被刷新覆盖');
+    await panel.getByRole('button', { name: '保存意见 · 待审核' }).click();
+    await panel.getByText('审核已保存，重新打开仍可继续查看。').waitFor();
+    assert.equal((await saved()).candidates[2].review_note, 'QA：未保存意见不能被刷新覆盖');
+    results.push({ case: 'concurrent review rejects stale page, refresh and retry preserve draft', passed: true });
+    const downloadPromise = page.waitForEvent('download');
+    await panel.getByRole('link', { name: '下载这版视频' }).click();
+    const download = await downloadPromise; const downloadPath = path.join(output, 'downloaded-review.mp4');
+    await download.saveAs(downloadPath);
+    assert.equal((await fs.readFile(downloadPath)).equals(await fs.readFile(path.join(path.dirname(manifest),'videos/03/review.mp4'))), true);
+    results.push({ case: 'downloaded MP4 is byte-identical to reviewed render', passed: true });
+    assert.equal(await panel.getByLabel('审核人', {exact:true}).count(), 0);
+    assert.equal(await page.locator('.editing-workbench').count(), 0, '批次审核下面不再放旧工程');
+    await panel.getByLabel('本批商品款号', {exact:true}).fill('QA-款号-021');
+    await panel.getByRole('button', {name:'保存款号',exact:true}).click();
+    await panel.getByText('款号已保存，已通过的成片分类同步更新。').waitFor();
+    assert.equal((await saved()).sku, 'QA-款号-021');
+    await panel.getByRole('button', {name:'审核通过',exact:true}).click();
+    await panel.getByText('审核已保存，重新打开仍可继续查看。').waitFor();
+    await page.getByRole('button',{name:'成片素材库',exact:true}).click();
+    await page.getByRole('button',{name:'QA-款号-021 · 1',exact:true}).waitFor({timeout:30000});
+    assert.equal(await page.locator('.finished-item').count(),1);
+    const libraryDownload = page.waitForEvent('download');
+    await page.getByRole('link',{name:'下载成片',exact:true}).click();
+    const libraryFile=path.join(output,'library-download.mp4');
+    await (await libraryDownload).saveAs(libraryFile);
+    assert((await fs.readFile(libraryFile)).equals(await fs.readFile(path.join(path.dirname(manifest),'videos/03/review.mp4'))));
+    for (const [width,height,label] of [[2560,1440,'2k'],[1707,960,'150-equivalent'],[960,720,'small']]) {
+      await page.setViewportSize({width,height});
+      assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth+1));
+      await page.screenshot({path:path.join(output,`library-${label}.png`),fullPage:true});
+    }
+    await page.reload(); await page.getByRole('button',{name:'成片素材库',exact:true}).click();
+    await page.getByRole('button',{name:'QA-款号-021 · 1',exact:true}).waitFor({timeout:30000});
+    results.push({case:'approve without operator name, classify, automatic library, reload and byte-identical download',passed:true});
+    await page.getByRole('button',{name:'后期剪辑',exact:true}).click();
+    await choices.nth(2).click();
+    await panel.getByRole('button',{name:'保存意见 · 待审核',exact:true}).click();
+    await panel.getByText('审核已保存，重新打开仍可继续查看。').waitFor();
+    await page.getByRole('button',{name:'成片素材库',exact:true}).click();
+    await page.getByRole('heading',{name:'审核通过的成片会自动显示在这里'}).waitFor({timeout:30000});
+    assert.equal(await page.locator('.finished-item').count(),0);
+    await page.getByRole('button',{name:'后期剪辑',exact:true}).click();
+    results.push({case:'retract approval removes video from library',passed:true});
+    for (const [width,height,label] of [[2560,1440,'2k'],[1920,1080,'1080p'],[2048,1152,'125-equivalent'],[1707,960,'150-equivalent'],[960,720,'small']]) {
+      await page.setViewportSize({width,height}); await panel.scrollIntoViewIfNeeded();
+      assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth+1), `window overflow ${label}`);
+      await panel.getByRole('button',{name:'审核通过',exact:true}).scrollIntoViewIfNeeded();
+      assert(await panel.getByRole('button',{name:'审核通过',exact:true}).isVisible());
+      assert(await page.getByRole('button',{name:'后期剪辑',exact:true}).evaluate(el => el.getBoundingClientRect().width >= 120), 'navigation must not inherit legacy multi-column layout');
+      await page.evaluate(() => window.scrollTo(0,0)); await page.screenshot({ path:path.join(output,`review-${label}.png`), fullPage:true });
+      results.push({case:`layout ${label} ${width}x${height} CSS viewport (not real Windows scaling)`,passed:true});
+    }
+    await page.setViewportSize({width:1280,height:900});
+    await page.addStyleTag({content:':root { --font-body:34px; --font-button:32px; --font-assist:28px; --font-subtitle:36px; --font-section:40px; }'});
+    assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth+1));
+    await panel.getByRole('button',{name:'审核通过',exact:true}).scrollIntoViewIfNeeded();
+    await panel.getByRole('button',{name:'审核通过',exact:true}).focus();
+    assert(await panel.getByRole('button',{name:'审核通过',exact:true}).evaluate(el => el === document.activeElement));
+    await page.evaluate(() => window.scrollTo(0,0)); await page.screenshot({path:path.join(output,'review-text-200.png'),fullPage:true});
+    results.push({case:'200% text: content and keyboard-accessible review actions remain reachable',passed:true});
+    assert.deepEqual(errors, []);
+    await fs.writeFile(path.join(output,'results.json'),JSON.stringify({results,errors},null,2));
+    console.log(JSON.stringify({passed:results.length,errors}));
+  } catch(e) {
+    await page.screenshot({path:path.join(output,'failure.png'),fullPage:true});
+    await fs.writeFile(path.join(output,'failure.json'),JSON.stringify({error:String(e),results,errors},null,2));
+    throw e;
+  } finally { await browser.close(); }
+})();

@@ -1,0 +1,441 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atai.local/schemas/analysis-report/1.0.0",
+  "title": "爆款内容工厂分析报告",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "fixture_data",
+    "status",
+    "revision",
+    "analysis_id",
+    "video_id",
+    "duration_ms",
+    "source",
+    "processing",
+    "summary",
+    "keyframes",
+    "shots",
+    "timeline",
+    "content_structure",
+    "emotion_curve",
+    "comments",
+    "comment_insights",
+    "metric_snapshots",
+    "evidence",
+    "scores",
+    "pattern_candidates",
+    "review"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.1.0" },
+    "fixture_data": { "type": "boolean" },
+    "status": { "enum": ["draft", "reviewed", "accepted"] },
+    "revision": { "type": "integer", "minimum": 1 },
+    "analysis_id": { "$ref": "#/$defs/id" },
+    "video_id": { "$ref": "#/$defs/id" },
+    "duration_ms": { "type": "integer", "minimum": 1 },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_id", "source_type", "source_uri", "imported_at", "authorization_status"],
+      "properties": {
+        "source_id": { "$ref": "#/$defs/id" },
+        "source_type": {
+          "enum": ["douyin_link", "local_file", "authorized_api"]
+        },
+        "source_uri": { "type": "string", "minLength": 1 },
+        "imported_at": { "type": "string", "format": "date-time" },
+        "authorization_status": {
+          "enum": ["public", "authorized", "internal"]
+        }
+      }
+    },
+    "processing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider", "model", "api_mode", "response_id", "prompt_version", "generated_at", "duration_ms", "upload_summary"],
+      "properties": {
+        "provider": { "$ref": "#/$defs/nonEmptyText" },
+        "purpose": { "enum": ["analysis", "video_review"] },
+        "model_profile_id": { "type": "string", "pattern": "^[a-z][a-z0-9_-]{2,63}$" },
+        "model": { "$ref": "#/$defs/nonEmptyText" },
+        "api_mode": { "enum": ["responses", "chat_completions", "fixture", "external_review"] },
+        "response_id": { "type": ["string", "null"] },
+        "prompt_version": { "$ref": "#/$defs/version" },
+        "generated_at": { "type": "string", "format": "date-time" },
+        "duration_ms": { "type": "integer", "minimum": 0 },
+        "upload_summary": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["keyframe_count", "text_characters", "total_bytes", "original_video_uploaded"],
+          "properties": {
+            "keyframe_count": { "type": "integer", "minimum": 0 },
+            "text_characters": { "type": "integer", "minimum": 0 },
+            "total_bytes": { "type": "integer", "minimum": 0 },
+            "original_video_uploaded": { "const": false }
+          }
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["video_type", "target_audience", "main_promise", "overall_conclusion", "hook_analysis", "consumer_psychology", "risks"],
+      "properties": {
+        "video_type": { "enum": ["product_seeding", "direct_conversion", "talking_review", "brand_content", "other"] },
+        "target_audience": { "$ref": "#/$defs/analysisClaim" },
+        "main_promise": { "$ref": "#/$defs/analysisClaim" },
+        "overall_conclusion": { "$ref": "#/$defs/analysisClaim" },
+        "hook_analysis": { "$ref": "#/$defs/analysisClaim" },
+        "consumer_psychology": { "$ref": "#/$defs/analysisClaim" },
+        "risks": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/analysisClaim" }
+        }
+      }
+    },
+    "keyframes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "shot_id", "timestamp_ms", "local_path"],
+        "properties": {
+          "id": { "$ref": "#/$defs/id" },
+          "shot_id": { "$ref": "#/$defs/id" },
+          "timestamp_ms": { "$ref": "#/$defs/time" },
+          "local_path": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "shots": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "start_ms",
+          "end_ms",
+          "shot_size",
+          "camera_movement",
+          "composition",
+          "performer_action",
+          "product_exposure",
+          "transcript",
+          "subtitle",
+          "keyframe_refs"
+        ],
+        "properties": {
+          "id": { "$ref": "#/$defs/id" },
+          "start_ms": { "$ref": "#/$defs/time" },
+          "end_ms": { "$ref": "#/$defs/time" },
+          "shot_size": {
+            "enum": ["extreme_closeup", "closeup", "medium", "full", "wide", "detail", "screen", "unknown"]
+          },
+          "camera_movement": {
+            "enum": ["static", "pan", "tilt", "dolly", "handheld", "zoom", "mixed", "unknown"]
+          },
+          "composition": { "$ref": "#/$defs/nonEmptyText" },
+          "performer_action": { "$ref": "#/$defs/nonEmptyText" },
+          "product_exposure": { "$ref": "#/$defs/nonEmptyText" },
+          "transcript": { "type": "string" },
+          "subtitle": { "type": "string" },
+          "keyframe_refs": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/id" },
+            "uniqueItems": true
+          }
+        }
+      }
+    },
+    "timeline": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "second_index", "start_ms", "end_ms", "visual_event", "transcript", "subtitle", "rhythm", "metric_refs"],
+        "properties": {
+          "id": { "$ref": "#/$defs/id" },
+          "second_index": { "type": "integer", "minimum": 0 },
+          "start_ms": { "$ref": "#/$defs/time" },
+          "end_ms": { "$ref": "#/$defs/time" },
+          "visual_event": { "$ref": "#/$defs/nonEmptyText" },
+          "transcript": { "type": "string" },
+          "subtitle": { "type": "string" },
+          "rhythm": { "enum": ["low", "medium", "high"] },
+          "metric_refs": {
+            "type": "array",
+            "items": { "$ref": "#/$defs/id" },
+            "uniqueItems": true
+          }
+        }
+      }
+    },
+    "content_structure": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "order", "label", "description", "start_ms", "end_ms", "evidence_ids"],
+        "properties": {
+          "id": { "$ref": "#/$defs/id" },
+          "order": { "type": "integer", "minimum": 1 },
+          "label": { "$ref": "#/$defs/nonEmptyText" },
+          "description": { "$ref": "#/$defs/nonEmptyText" },
+          "start_ms": { "$ref": "#/$defs/time" },
+          "end_ms": { "$ref": "#/$defs/time" },
+          "evidence_ids": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "$ref": "#/$defs/id" },
+            "uniqueItems": true
+          }
+        }
+      }
+    },
+    "emotion_curve": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "start_ms", "end_ms", "intensity", "label", "reason", "evidence_ids"],
+        "properties": {
+          "id": { "$ref": "#/$defs/id" },
+          "start_ms": { "$ref": "#/$defs/time" },
+          "end_ms": { "$ref": "#/$defs/time" },
+          "intensity": { "type": "integer", "minimum": 0, "maximum": 100 },
+          "label": { "$ref": "#/$defs/nonEmptyText" },
+          "reason": { "$ref": "#/$defs/nonEmptyText" },
+          "evidence_ids": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "$ref": "#/$defs/id" },
+            "uniqueItems": true
+          }
+        }
+      }
+    },
+    "comment_insights": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "topic", "summary", "sentiment", "representative_text", "source_label", "confidence", "evidence_ids"],
+        "properties": {
+          "id": { "$ref": "#/$defs/id" },
+          "topic": { "$ref": "#/$defs/nonEmptyText" },
+          "summary": { "$ref": "#/$defs/nonEmptyText" },
+          "sentiment": { "enum": ["positive", "neutral", "negative", "mixed"] },
+          "representative_text": { "$ref": "#/$defs/nonEmptyText" },
+          "source_label": { "$ref": "#/$defs/nonEmptyText" },
+          "confidence": { "$ref": "#/$defs/confidence" },
+          "evidence_ids": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "$ref": "#/$defs/id" },
+            "uniqueItems": true
+          }
+        }
+      }
+    },
+    "comments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "text", "source_label", "like_count", "is_author_reply", "confidence"],
+        "properties": {
+          "id": { "$ref": "#/$defs/id" },
+          "text": { "$ref": "#/$defs/nonEmptyText" },
+          "source_label": { "$ref": "#/$defs/nonEmptyText" },
+          "like_count": { "type": ["integer", "null"], "minimum": 0 },
+          "is_author_reply": { "type": "boolean" },
+          "confidence": { "$ref": "#/$defs/confidence" }
+        }
+      }
+    },
+    "metric_snapshots": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "captured_at", "source_type", "confidence", "values"],
+        "properties": {
+          "id": { "$ref": "#/$defs/id" },
+          "captured_at": { "type": "string", "format": "date-time" },
+          "source_type": { "enum": ["screenshot", "table", "manual", "authorized_api", "public"] },
+          "confidence": { "$ref": "#/$defs/confidence" },
+          "values": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "play_count": { "type": ["integer", "null"], "minimum": 0 },
+              "follower_gain": { "type": ["integer", "null"], "minimum": 0 },
+              "three_second_retention": { "$ref": "#/$defs/nullableRatio" },
+              "completion_rate": { "$ref": "#/$defs/nullableRatio" },
+              "like_count": { "type": ["integer", "null"], "minimum": 0 },
+              "comment_count": { "type": ["integer", "null"], "minimum": 0 },
+              "favorite_count": { "type": ["integer", "null"], "minimum": 0 },
+              "share_count": { "type": ["integer", "null"], "minimum": 0 },
+              "product_click_rate": { "$ref": "#/$defs/nullableRatio" },
+              "transaction_count": { "type": ["integer", "null"], "minimum": 0 },
+              "conversion_rate": { "$ref": "#/$defs/nullableRatio" }
+            }
+          }
+        }
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "claim", "source_type", "source_id", "start_ms", "end_ms", "confidence", "is_inference"],
+        "properties": {
+          "id": { "$ref": "#/$defs/id" },
+          "claim": { "$ref": "#/$defs/nonEmptyText" },
+          "source_type": { "enum": ["shot", "timeline", "metric", "comment", "transcript", "keyframe"] },
+          "source_id": { "$ref": "#/$defs/id" },
+          "start_ms": { "$ref": "#/$defs/nullableTime" },
+          "end_ms": { "$ref": "#/$defs/nullableTime" },
+          "confidence": { "$ref": "#/$defs/confidence" },
+          "is_inference": { "type": "boolean" }
+        }
+      }
+    },
+    "scores": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["score_version", "total_score", "items"],
+      "properties": {
+        "score_version": { "$ref": "#/$defs/version" },
+        "total_score": { "type": "number", "minimum": 0, "maximum": 100 },
+        "items": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["dimension", "weight", "score", "evidence_ids"],
+            "properties": {
+              "dimension": {
+                "enum": ["hook_strength", "proof_strength", "rhythm_efficiency", "product_fit", "consumer_psychology", "interaction_design", "data_result"]
+              },
+              "weight": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+              "score": { "type": "number", "minimum": 0, "maximum": 100 },
+              "evidence_ids": {
+                "type": "array",
+                "minItems": 1,
+                "items": { "$ref": "#/$defs/id" },
+                "uniqueItems": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "pattern_candidates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "name", "mechanism", "steps", "necessary_conditions", "failure_signals"],
+        "properties": {
+          "id": { "$ref": "#/$defs/id" },
+          "name": { "$ref": "#/$defs/nonEmptyText" },
+          "mechanism": { "$ref": "#/$defs/nonEmptyText" },
+          "mechanism_key": {
+            "enum": [
+              "result_then_visual_proof",
+              "question_then_demonstration",
+              "pain_point_then_solution",
+              "contrast_then_proof",
+              "identity_scenario",
+              "value_anchor",
+              "curiosity_gap",
+              "social_proof",
+              "direct_product_pitch",
+              "verbal_overload_failure",
+              "fit_reassurance",
+              "other"
+            ]
+          },
+          "reuse_mode": { "enum": ["reuse", "avoid", "uncertain"] },
+          "steps": {
+            "type": "array",
+            "minItems": 2,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["id", "order", "description", "evidence_ids"],
+              "properties": {
+                "id": { "$ref": "#/$defs/id" },
+                "order": { "type": "integer", "minimum": 1 },
+                "description": { "$ref": "#/$defs/nonEmptyText" },
+                "evidence_ids": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": { "$ref": "#/$defs/id" },
+                  "uniqueItems": true
+                }
+              }
+            }
+          },
+          "necessary_conditions": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "$ref": "#/$defs/nonEmptyText" }
+          },
+          "failure_signals": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "$ref": "#/$defs/nonEmptyText" }
+          }
+        }
+      }
+    },
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reviewer", "reviewed_at", "note"],
+      "properties": {
+        "reviewer": { "type": ["string", "null"] },
+        "reviewed_at": { "type": ["string", "null"], "format": "date-time" },
+        "note": { "type": ["string", "null"] }
+      }
+    }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9_-]{2,63}$" },
+    "time": { "type": "integer", "minimum": 0 },
+    "nullableTime": { "type": ["integer", "null"], "minimum": 0 },
+    "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+    "nullableRatio": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+    "nonEmptyText": { "type": "string", "minLength": 1 },
+    "analysisClaim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["text", "evidence_ids", "confidence", "is_inference"],
+      "properties": {
+        "text": { "$ref": "#/$defs/nonEmptyText" },
+        "evidence_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/id" },
+          "uniqueItems": true
+        },
+        "confidence": { "$ref": "#/$defs/confidence" },
+        "is_inference": { "type": "boolean" }
+      }
+    },
+    "version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" }
+  }
+}

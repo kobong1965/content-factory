@@ -1,0 +1,112 @@
+{
+  "schema_version": "1.1.0",
+  "fixture_data": true,
+  "revision": 1,
+  "product_id": "product_demo_001",
+  "sku": "DEMO-JACKET-001",
+  "name": "男士纹理通勤夹克（工程样例）",
+  "category": "mens_clothing",
+  "status": "draft",
+  "sources": [
+    {
+      "id": "source_detail_demo_001",
+      "kind": "detail_page",
+      "label": "工程样例详情页",
+      "source_ref": "https://example.invalid/product-demo",
+      "asset_id": null,
+      "mime_type": null,
+      "sha256": null,
+      "size_bytes": null,
+      "managed": false
+    }
+  ],
+  "facts": [
+    {
+      "id": "fact_fabric_demo_001",
+      "field": "fabric",
+      "label": "面料",
+      "value": "聚酯纤维混纺",
+      "unit": null,
+      "source_type": "official_detail_page",
+      "source_id": "source_detail_demo_001",
+      "source_ref": "工程样例详情页面料栏",
+      "confirmed_by": "fixture",
+      "confirmed_at": "2026-08-29T06:00:00Z"
+    },
+    {
+      "id": "fact_fit_demo_001",
+      "field": "fit",
+      "label": "版型",
+      "value": "标准合体",
+      "unit": null,
+      "source_type": "manual_confirmed",
+      "source_id": null,
+      "source_ref": "S4 工程样例人工确认",
+      "confirmed_by": "fixture",
+      "confirmed_at": "2026-08-29T06:00:00Z"
+    },
+    {
+      "id": "fact_size_demo_001",
+      "field": "size",
+      "label": "尺码",
+      "value": "M-XXL",
+      "unit": null,
+      "source_type": "manual_confirmed",
+      "source_id": null,
+      "source_ref": "S4 工程样例人工确认",
+      "confirmed_by": "fixture",
+      "confirmed_at": "2026-08-29T06:00:00Z"
+    },
+    {
+      "id": "fact_color_demo_001",
+      "field": "color",
+      "label": "颜色",
+      "value": "深灰",
+      "unit": null,
+      "source_type": "manual_confirmed",
+      "source_id": null,
+      "source_ref": "S4 工程样例人工确认",
+      "confirmed_by": "fixture",
+      "confirmed_at": "2026-08-29T06:00:00Z"
+    },
+    {
+      "id": "fact_price_demo_001",
+      "field": "price",
+      "label": "样例价格",
+      "value": "299",
+      "unit": "CNY",
+      "source_type": "official_detail_page",
+      "source_id": "source_detail_demo_001",
+      "source_ref": "工程样例详情页价格栏",
+      "confirmed_by": "fixture",
+      "confirmed_at": "2026-08-29T06:00:00Z"
+    }
+  ],
+  "selling_point_fact_ids": ["fact_fabric_demo_001", "fact_fit_demo_001"],
+  "forbidden_expressions": ["百分百", "全网最低"],
+  "unprovable_claims": ["显瘦十斤"],
+  "brand_boundary_confirmed_by": "fixture",
+  "brand_boundary_confirmed_at": "2026-08-29T06:00:00Z",
+  "completeness": {
+    "required_fields": 10,
+    "completed_fields": 10,
+    "ratio": 1,
+    "missing_fields": []
+  },
+  "shooting_constraints": {
+    "models": ["1 名男模"],
+    "locations": ["室内白墙"],
+    "equipment": ["手机", "三脚架"],
+    "lights": ["常亮灯"],
+    "daily_available_minutes": 60,
+    "budget_cny": 300,
+    "reusable_assets_allowed": true,
+    "brand_tone": "利落、克制、可信",
+    "required_disclosures": ["价格与活动以实际上架信息为准"],
+    "max_duration_ms": 30000,
+    "confirmed_by": "fixture",
+    "confirmed_at": "2026-08-29T06:00:00Z"
+  },
+  "created_at": "2026-08-29T06:00:00Z",
+  "updated_at": "2026-08-29T06:00:00Z"
+}

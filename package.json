@@ -1,0 +1,28 @@
+{
+  "name": "content-factory",
+  "version": "0.1.30",
+  "private": true,
+  "description": "爆款内容工厂（男装编剪器）工程工作区",
+  "packageManager": "pnpm@11.19.0",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @content-factory/desktop dev",
+    "dev:desktop": "pnpm --filter @content-factory/desktop dev",
+    "dev:tauri": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/dev-tauri.ps1",
+    "build": "pnpm -r --if-present run build",
+    "typecheck": "pnpm -r --if-present run typecheck",
+    "test": "pnpm -r --if-present run test",
+    "verify:web": "pnpm run typecheck && pnpm run test && pnpm run build",
+    "verify:s0": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-s0.ps1",
+    "verify:s1": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-s1.ps1",
+    "verify:s2": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-s2.ps1",
+    "verify:s3": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-s3.ps1",
+    "verify:s4": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-s4.ps1",
+    "verify:s5": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-s5.ps1",
+    "verify:s6": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-s6.ps1",
+    "verify:s7": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-s7.ps1",
+    "verify:s8": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-s8.ps1"
+  }
+}

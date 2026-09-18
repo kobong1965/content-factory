@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://atai.local/schemas/render-output/1.0.0",
+  "title": "爆款内容工厂成片产物",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "fixture_data", "output_id", "project_id", "project_revision", "variant_id", "status", "resources", "media", "render", "review", "created_at", "updated_at"],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "fixture_data": { "type": "boolean" },
+    "output_id": { "$ref": "#/$defs/id" },
+    "project_id": { "$ref": "#/$defs/id" },
+    "project_revision": { "type": "integer", "minimum": 1 },
+    "variant_id": { "$ref": "#/$defs/id" },
+    "status": { "enum": ["video_review", "approved", "rejected"] },
+    "resources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["video_ref", "clean_video_ref", "subtitle_ref", "project_ref", "jianying_package_ref", "jianying_experimental"],
+      "properties": {
+        "video_ref": { "$ref": "#/$defs/id" },
+        "clean_video_ref": { "$ref": "#/$defs/id" },
+        "subtitle_ref": { "$ref": "#/$defs/id" },
+        "project_ref": { "$ref": "#/$defs/id" },
+        "jianying_package_ref": { "$ref": "#/$defs/id" },
+        "jianying_experimental": { "const": true }
+      }
+    },
+    "media": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["filename", "mime_type", "sha256", "size_bytes", "duration_ms", "width", "height", "fps", "video_codec", "audio_codec", "has_audio", "faststart"],
+      "properties": {
+        "filename": { "type": "string", "minLength": 1, "maxLength": 255 },
+        "mime_type": { "const": "video/mp4" },
+        "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "size_bytes": { "type": "integer", "minimum": 1 },
+        "duration_ms": { "type": "integer", "minimum": 1 },
+        "width": { "const": 1080 },
+        "height": { "const": 1920 },
+        "fps": { "type": "number", "minimum": 29, "maximum": 31 },
+        "video_codec": { "enum": ["h264", "avc1"] },
+        "audio_codec": { "const": "aac" },
+        "has_audio": { "const": true },
+        "faststart": { "const": true }
+      }
+    },
+    "render": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["task_id", "ffmpeg_version", "rendered_at", "duration_ms"],
+      "properties": {
+        "task_id": { "$ref": "#/$defs/id" },
+        "ffmpeg_version": { "type": "string", "minLength": 1, "maxLength": 500 },
+        "rendered_at": { "type": "string", "format": "date-time" },
+        "duration_ms": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "reviewed_by", "reviewed_at", "note"],
+      "properties": {
+        "status": { "enum": ["pending", "approved", "rejected"] },
+        "reviewed_by": { "type": ["string", "null"], "maxLength": 100 },
+        "reviewed_at": { "type": ["string", "null"], "format": "date-time" },
+        "note": { "type": ["string", "null"], "maxLength": 2000 }
+      }
+    },
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" }
+  },
+  "$defs": { "id": { "type": "string", "pattern": "^[a-z][a-z0-9_-]{2,63}$" } }
+}
