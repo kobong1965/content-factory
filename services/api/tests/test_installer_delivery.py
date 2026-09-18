@@ -62,6 +62,17 @@ def test_reinstall_does_not_claim_success_if_existing_binary_is_missing(tmp_path
     (version/'installed-manifest.json').write_text(json.dumps(manifest),'utf-8')
     with pytest.raises(ValueError):installer.install(tmp_path,target,manifest,install_prerequisites=False)
 
+def test_installer_initializes_empty_readiness_manifest_without_overwriting(tmp_path):
+    import json
+    installer.ensure_readiness_manifest(tmp_path)
+    file=tmp_path/'data/gold-set/manifest.json'
+    value=json.loads(file.read_text('utf-8'))
+    assert len(value['video_slots'])==20 and len(value['product_slots'])==3
+    assert all(slot['case_file'] is None and slot['status']=='pending' for slot in value['video_slots'])
+    file.write_text('preserve-existing-resource','utf-8')
+    installer.ensure_readiness_manifest(tmp_path)
+    assert file.read_text('utf-8')=='preserve-existing-resource'
+
 def test_occupied_default_port_is_not_reused():
     with socket.socket() as blocker:
         try:blocker.bind(('127.0.0.1',8766))

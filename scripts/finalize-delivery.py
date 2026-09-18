@@ -9,14 +9,16 @@ def main():
     p.add_argument('--source',type=Path,required=True)
     p.add_argument('--output',type=Path,required=True)
     p.add_argument('--documentation',type=Path,required=True)
+    p.add_argument('--refresh-metadata',action='store_true')
     args=p.parse_args()
-    args.output.mkdir(parents=True,exist_ok=False)
+    args.output.mkdir(parents=True,exist_ok=args.refresh_metadata)
     names=['content-factory-0.1.30-setup.exe','content-factory-0.1.30-program.zip',
            'content-factory-0.1.30-speech-model.zip','content-factory-0.1.30-prerequisites.zip','delivery-manifest.json']
     hashes=[]
     for name in names:
         target=args.output/name
-        shutil.copyfile(args.source/name,target)
+        if not args.refresh_metadata or name.endswith('.exe'):
+            shutil.copyfile(args.source/name,target)
         with target.open('rb') as stream:sha=hashlib.file_digest(stream,'sha256').hexdigest()
         hashes.append(sha+'  '+name)
     (args.output/'SHA256SUMS.txt').write_text('\n'.join(hashes)+'\n',encoding='utf-8')

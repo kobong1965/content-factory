@@ -66,6 +66,19 @@ def copy_internal_config(source, destination):
             shutil.copyfileobj(incoming,outgoing)
 
 
+def ensure_readiness_manifest(destination):
+    file=destination/'data/gold-set/manifest.json'
+    if file.exists():
+        return
+    value={'schema_version':'1.0.0','fixture_data':False,'project_id':'content_factory_menswear',
+           'required_video_count':20,'required_product_count':3,
+           'video_slots':[{'slot_id':f'video_{i:03d}','case_file':None,'status':'pending'} for i in range(1,21)],
+           'product_slots':[{'slot_id':f'product_{i:03d}','profile_file':None,'status':'pending'} for i in range(1,4)]}
+    file.parent.mkdir(parents=True,exist_ok=True)
+    with file.open('x',encoding='utf-8') as stream:
+        json.dump(value,stream,ensure_ascii=False,indent=2)
+
+
 def install(source, target, manifest, *, install_prerequisites=True):
     verify_payloads(source, manifest)
     version = manifest['version']
@@ -78,6 +91,7 @@ def install(source, target, manifest, *, install_prerequisites=True):
             if any(not (destination/name).is_file() for name in manifest['required']):
                 raise ValueError('Existing installation is incomplete; preserved for recovery')
             copy_internal_config(source,destination)
+            ensure_readiness_manifest(destination)
             return destination
         raise ValueError('Existing version is different; preserved without overwrite')
     required = sum(part['unpacked_bytes'] for part in manifest['parts']) + 1024**3
@@ -101,6 +115,7 @@ def install(source, target, manifest, *, install_prerequisites=True):
         raise ValueError('Pinned analysis method verification failed')
     skill.write_bytes(content)
     copy_internal_config(source,stage)
+    ensure_readiness_manifest(stage)
     env = os.environ.copy()
     temporary = stage/'install-temp'
     temporary.mkdir()
