@@ -15,6 +15,18 @@ import zipfile
 from urllib.request import urlopen
 
 
+def install_vc_runtime(executable, environment):
+    """Windows requests elevation only if the required machine runtime is absent."""
+    child_env=environment.copy()
+    child_env['CF_PREREQUISITE_EXE']=str(executable)
+    # No user path is interpolated as PowerShell code. Cancelling UAC fails the
+    # install before publication and leaves any old application version intact.
+    script="$ErrorActionPreference='Stop'; try { $p=Start-Process -FilePath $env:CF_PREREQUISITE_EXE -ArgumentList '/install','/quiet','/norestart' -Verb RunAs -Wait -PassThru; exit $p.ExitCode } catch { exit 1 }"
+    powershell=Path(os.environ['SystemRoot'])/'System32/WindowsPowerShell/v1.0/powershell.exe'
+    return subprocess.run([str(powershell),'-NoProfile','-NonInteractive','-Command',script],env=child_env,
+                          creationflags=subprocess.CREATE_NO_WINDOW).returncode
+
+
 def digest(path):
     with path.open('rb') as stream:
         return hashlib.file_digest(stream, 'sha256').hexdigest()
@@ -91,7 +103,7 @@ def install(source, target, manifest, *, install_prerequisites=True):
         except OSError:
             vc_present = False
         if not vc_present:
-            code = subprocess.run([str(stage/'prerequisites/vc-redist-x64.exe'),'/install','/quiet','/norestart'],env=env).returncode
+            code = install_vc_runtime(stage/'prerequisites/vc-redist-x64.exe',env)
             if code not in (0,1638,3010):
                 raise RuntimeError('VC runtime installation failed: '+str(code))
         webview = False
