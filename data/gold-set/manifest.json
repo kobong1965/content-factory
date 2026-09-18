@@ -1,0 +1,34 @@
+{
+  "schema_version": "1.0.0",
+  "fixture_data": false,
+  "project_id": "content_factory_menswear",
+  "required_video_count": 20,
+  "required_product_count": 3,
+  "video_slots": [
+    { "slot_id": "video_001", "case_file": null, "status": "pending" },
+    { "slot_id": "video_002", "case_file": null, "status": "pending" },
+    { "slot_id": "video_003", "case_file": null, "status": "pending" },
+    { "slot_id": "video_004", "case_file": null, "status": "pending" },
+    { "slot_id": "video_005", "case_file": null, "status": "pending" },
+    { "slot_id": "video_006", "case_file": null, "status": "pending" },
+    { "slot_id": "video_007", "case_file": null, "status": "pending" },
+    { "slot_id": "video_008", "case_file": null, "status": "pending" },
+    { "slot_id": "video_009", "case_file": null, "status": "pending" },
+    { "slot_id": "video_010", "case_file": null, "status": "pending" },
+    { "slot_id": "video_011", "case_file": null, "status": "pending" },
+    { "slot_id": "video_012", "case_file": null, "status": "pending" },
+    { "slot_id": "video_013", "case_file": null, "status": "pending" },
+    { "slot_id": "video_014", "case_file": null, "status": "pending" },
+    { "slot_id": "video_015", "case_file": null, "status": "pending" },
+    { "slot_id": "video_016", "case_file": null, "status": "pending" },
+    { "slot_id": "video_017", "case_file": null, "status": "pending" },
+    { "slot_id": "video_018", "case_file": null, "status": "pending" },
+    { "slot_id": "video_019", "case_file": null, "status": "pending" },
+    { "slot_id": "video_020", "case_file": null, "status": "pending" }
+  ],
+  "product_slots": [
+    { "slot_id": "product_001", "profile_file": null, "status": "pending" },
+    { "slot_id": "product_002", "profile_file": null, "status": "pending" },
+    { "slot_id": "product_003", "profile_file": null, "status": "pending" }
+  ]
+}
