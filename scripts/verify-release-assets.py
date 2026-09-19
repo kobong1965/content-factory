@@ -17,6 +17,19 @@ def main():
         '--json','assets,isDraft,isPrerelease,url,tagName'],capture_output=True,check=True,encoding='utf-8')
     release=json.loads(result.stdout)
     assets={asset['name']:asset for asset in release['assets']}
+    # Unchanged large components may reference an earlier immutable release.
+    manifest_path=args.delivery/'update-manifest.json'
+    if manifest_path.is_file():
+        import re
+        tags=set()
+        for part in json.loads(manifest_path.read_text('utf-8'))['files']:
+            match=re.fullmatch(r'https://github.com/'+re.escape(args.repo)+r'/releases/download/(v\d+\.\d+\.\d+)/[^/]+',part['url'])
+            if not match:raise ValueError('Unexpected component origin')
+            if match[1]!=args.tag:tags.add(match[1])
+        for tag in tags:
+            previous=subprocess.run([args.gh,'release','view',tag,'--repo',args.repo,'--json','assets'],capture_output=True,check=True,encoding='utf-8')
+            for asset in json.loads(previous.stdout)['assets']:
+                assets.setdefault(asset['name'],asset)
     checked=[]
     for line in (args.delivery/'SHA256SUMS.txt').read_text('utf-8').splitlines():
         expected,name=line.split('  ',1)

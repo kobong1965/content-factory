@@ -45,6 +45,12 @@ def main():
     raw = json.dumps({'version': version, 'files': parts}, sort_keys=True, indent=2).encode()
     (args.delivery/'update-manifest.json').write_bytes(raw)
     (args.delivery/'update-manifest.sig').write_bytes(base64.b64encode(key.sign(raw)))
+    checksum_names=names+['update-manifest.json','update-manifest.sig']
+    checksums=[]
+    for name in checksum_names:
+        with (args.delivery/name).open('rb') as stream:
+            checksums.append(hashlib.file_digest(stream,'sha256').hexdigest()+'  '+name)
+    (args.delivery/'SHA256SUMS.txt').write_text('\n'.join(checksums)+'\n','utf-8')
     print('Update manifest signed:', version)
 
 
