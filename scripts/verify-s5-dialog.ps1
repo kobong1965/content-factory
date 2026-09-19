@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param([string]$RunRoot = '', [string]$PlaywrightModule = '', [string]$BrowserScript = 'verify-s5-dialog.cjs')
+param([string]$RunRoot = '', [string]$PlaywrightModule = '', [string]$BrowserScript = 'verify-s5-dialog.cjs', [string]$PythonExecutable = '', [string[]]$AdditionalPythonPath = @())
 $ErrorActionPreference = 'Stop'
 $repo = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $storage = Join-Path 'E:\' ('Codex' + [char]0x5DE5 + [char]0x4F5C + [char]0x76D8)
@@ -10,6 +10,7 @@ if (Test-Path -LiteralPath $RunRoot) { throw 'Choose a new RunRoot; existing tes
 if (-not $PlaywrightModule) { $PlaywrightModule = Join-Path $storage 'caches\npm-playwright-cli\_npx\31e32ef8478fbf80\node_modules\playwright' }
 if (-not (Test-Path -LiteralPath $PlaywrightModule)) { throw 'Provide -PlaywrightModule with an existing Playwright package; this script does not download dependencies.' }
 $python = Join-Path $repo '.venv\Scripts\python.exe'
+if ($PythonExecutable) { $python = $PythonExecutable }
 $node = (Get-Command node -ErrorAction Stop).Source
 $desktop = Join-Path $repo 'apps\desktop'
 foreach ($port in @(18767, 18411, 1420)) {
@@ -27,6 +28,7 @@ $env:CONTENT_FACTORY_S3_CONFIG_PATH = Join-Path $RunRoot 'gateway.json'
 $env:CONTENT_FACTORY_EXPORT_ROOT = Join-Path $RunRoot 'downloads'
 foreach ($stage in 4..8) { [Environment]::SetEnvironmentVariable("CONTENT_FACTORY_S${stage}_DATA_DIR", (Join-Path $RunRoot "s$stage"), 'Process') }
 $env:PYTHONPATH = (@('packages\contracts\python', 'workers\media\src', 'services\api\src') | ForEach-Object { Join-Path $repo $_ }) -join ';'
+if ($AdditionalPythonPath.Count) { $env:PYTHONPATH += ';' + ($AdditionalPythonPath -join ';') }
 $env:VITE_API_URL = 'http://127.0.0.1:18767'
 New-Item -ItemType Directory -Force -Path $env:TEMP | Out-Null
 & $python -B (Join-Path $PSScriptRoot 'seed-s5-qa.py') --root $RunRoot --relay-port 18411

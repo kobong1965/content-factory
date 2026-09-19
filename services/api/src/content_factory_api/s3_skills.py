@@ -457,8 +457,15 @@ class ViralSkillStore:
                            WHERE candidate_id=?""",
                         (core["cluster_key"], revision, content_hash, _canonical_json(payload), now, candidate_id),
                     )
+            # Imported evidence snapshots are independent of this computer's
+            # analysis queue. Its absence must not revoke an approved import.
+            bundled = set()
+            if connection.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='bundled_skill_sources'").fetchone():
+                bundled = {item[0] for item in connection.execute('SELECT candidate_id FROM bundled_skill_sources')}
             for candidate_id, row in rows.items():
                 if candidate_id in incoming or not bool(row["active"]):
+                    continue
+                if candidate_id in bundled:
                     continue
                 core = json.loads(row["payload_json"])
                 core.update({"active": False})

@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { PROJECT_NAME, PROJECT_VERSION } from '@content-factory/contracts';
 import { GatewaySettings } from './GatewaySettings';
+import { ServiceLinks } from './ServiceLinks';
+import { SoftwareUpdates } from './SoftwareUpdates';
 import { S2MediaWorkspace } from './S2MediaWorkspace';
 import { S3AnalysisWorkspace } from './S3AnalysisWorkspace';
 import { FinishedLibrary } from './FinishedLibrary';
@@ -11,7 +13,7 @@ import { persistUiScale, readUiScale, type UiScale } from './uiPreferences';
 import { guardUnsavedTransition, useUnsavedChanges, useUnsavedChangesBeforeUnload } from './unsavedChanges';
 import './simplified-workspace.css';
 
-type Workspace = 'analysis' | 'editing' | 'finished' | 'settings';
+type Workspace = 'analysis' | 'editing' | 'finished' | 'settings' | 'updates';
 type AnalysisStep = 'upload' | 'analysis';
 export function App() {
   const [workspace, setWorkspace] = useState<Workspace>('editing');
@@ -33,10 +35,10 @@ export function App() {
     <aside className="sidebar" aria-label="项目导航">
       <div className="brand-lockup"><img className="brand-mark" src="/brand-logo.png" alt="" /><div className="brand-copy"><strong>{PROJECT_NAME}</strong><span>素材剪辑工作台</span></div></div>
       <nav aria-label="主要工作区">{([{id:'analysis',label:'素材分析'}, {id:'editing',label:'视频剪辑'}, {id:'finished',label:'成片素材库'}] as const).map(item => <button key={item.id} type="button" className={'nav-item ' + (workspace === item.id ? 'nav-item-active' : '')} aria-current={workspace === item.id ? 'page' : undefined} onClick={() => navigate(item.id)}>{item.label}</button>)}</nav>
-      <div className="sidebar-note"><button type="button" className="text-button" onClick={() => navigate('settings')}>模型连接设置</button><small>版本 {PROJECT_VERSION}</small></div>
+      <div className="sidebar-note"><button type="button" className="text-button" onClick={() => navigate('settings')}>模型连接设置</button><button type="button" className="text-button" onClick={() => navigate('updates')}>版本 {PROJECT_VERSION} · 检查更新</button></div>
     </aside>
     <main id="workspace-content" data-workspace={workspace}>
-      <header className="topbar"><div className="topbar-location"><strong>{workspace === 'analysis' ? '素材分析' : workspace === 'editing' ? '视频剪辑' : workspace === 'finished' ? '成片素材库' : '模型连接设置'}</strong><small>{workspace === 'analysis' ? '把对标方法审核为剪辑 Skill' : workspace === 'editing' ? '多项目自动排队与成片审核' : '按批次制作与管理'}</small></div><div className="topbar-actions">
+      <header className="topbar"><div className="topbar-location"><strong>{workspace === 'analysis' ? '素材分析' : workspace === 'editing' ? '视频剪辑' : workspace === 'finished' ? '成片素材库' : workspace === 'updates' ? '版本与更新' : '模型连接设置'}</strong><small>{workspace === 'analysis' ? '把对标方法审核为剪辑 Skill' : workspace === 'editing' ? '多项目自动排队与成片审核' : workspace === 'updates' ? '检查版本、下载与安全安装' : workspace === 'settings' ? '模型连接、余额与用量' : '按批次制作与管理'}</small></div><div className="topbar-actions">
         <div className="ui-scale-switch" role="group" aria-label="界面字号"><button aria-pressed={uiScale === 'comfortable'} onClick={() => setUiScale('comfortable')}>舒适</button><button aria-pressed={uiScale === 'large'} onClick={() => setUiScale('large')}>大字号</button></div>
         <span className={'connection-status connection-status-' + connection} role="status">{connection === 'live' ? '本机服务已连接' : connection === 'offline' ? '本机服务未启动' : '正在连接本机服务'}</span>
         <button className="secondary-button" onClick={() => { setRefreshToken(v => v + 1); void media.refresh(); void analysis.refresh(); }}>刷新</button>
@@ -47,7 +49,8 @@ export function App() {
       </>}
       {workspace === 'editing' && <AutoEditWorkspace reviewRequested={reviewRequested} />}
       {workspace === 'finished' && <FinishedLibrary refreshToken={refreshToken} openReview={openReview} />}
-      {workspace === 'settings' && <GatewaySettings analysis={analysis} onDirtyChange={setSettingsDirty} />}
+      {workspace === 'settings' && <><ServiceLinks /><GatewaySettings analysis={analysis} onDirtyChange={setSettingsDirty} /></>}
+      {workspace === 'updates' && <SoftwareUpdates />}
     </main>
   </div>;
 }

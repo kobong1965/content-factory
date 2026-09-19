@@ -17,6 +17,17 @@ def load(name):
 installer=load('install_payload')
 launcher=load('installed_launcher')
 
+def test_damaged_optional_skill_bundle_does_not_block_existing_installation(tmp_path,monkeypatch):
+    root=tmp_path/'app';profile=tmp_path/'profile'
+    (root/'internal').mkdir(parents=True);(profile/'runtime').mkdir(parents=True)
+    (root/'internal/business-skills.cfskills').write_text('corrupt','utf-8')
+    (profile/'existing-user-file.txt').write_text('preserve','utf-8')
+    monkeypatch.setattr(launcher,'show_message',lambda *a,**k:None)
+    result=launcher.import_bundled_skills(root,profile)
+    assert result['status']=='failed'
+    assert (profile/'existing-user-file.txt').read_text('utf-8')=='preserve'
+    assert (profile/'runtime/skill-import.json').is_file()
+
 @pytest.mark.parametrize('member',['../escape.txt','/absolute.txt','C:/absolute.txt','dir/../../escape.txt','..\\escape.txt'])
 def test_extraction_rejects_traversal_before_writing(tmp_path,member):
     archive=tmp_path/'bad.zip'

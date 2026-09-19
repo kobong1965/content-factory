@@ -92,6 +92,49 @@ def show_message(text, error=False):
     ctypes.windll.user32.MessageBoxW(None,text,'爆款内容工厂',0x10 if error else 0x40)
 
 
+def apply_pending_update(root, profile):
+    """Called only after the owned API and window exit, while the profile is locked."""
+    pending=profile/'runtime/update-request.json'
+    if not pending.exists():
+        return None
+    from content_factory_api.software_updates import verify_manifest, version_tuple, digest, has_active_tasks
+    import base64
+    try:
+        value=json.loads(pending.read_text('utf-8'))
+        version=value['version'];version_tuple(version)
+        current=json.loads((root/'package.json').read_text('utf-8'))['version']
+        if root.parent.name!='versions' or version_tuple(version)<=version_tuple(current):
+            raise ValueError('Invalid update target')
+        if has_active_tasks(profile):
+            raise ValueError('Work is still queued')
+        directory=profile/'cache/updates'/version
+        manifest=verify_manifest((directory/'update-manifest.json').read_bytes(),
+            (directory/'update-manifest.sig').read_bytes(),base64.b64decode((root/'resources/update-signing.pub').read_bytes().strip(),validate=True))
+        if manifest['version']!=version:
+            raise ValueError('Update version mismatch')
+        for part in manifest['files']:
+            file=directory/part['name']
+            if not file.is_file() or file.stat().st_size!=part['bytes'] or digest(file)!=part['sha256']:
+                raise ValueError('Update component missing or changed')
+        installer_name=f'content-factory-{version}-setup.exe'
+        if installer_name not in {part['name'] for part in manifest['files']}:
+            raise ValueError('Installer not signed in manifest')
+        install_root=root.parent.parent
+        arguments=[str(directory/installer_name),'/S']
+        if profile==install_root/'TestProfile':arguments.append('/TESTMODE')
+        arguments.append('/D='+str(install_root))
+        code=subprocess.run(arguments,cwd=directory,creationflags=subprocess.CREATE_NO_WINDOW).returncode
+        new_root=install_root/'versions'/version
+        if code or not (new_root/'scripts/installed_launcher.py').is_file():
+            raise ValueError('Installer failed')
+        pending.unlink()
+        return new_root
+    except Exception:
+        pending.unlink(missing_ok=True)
+        show_message('更新未完成，旧版本和用户数据已保留。将重新打开旧版本；可再次检查更新并重试。',error=True)
+        return root
+
+
 def import_internal_config(root, profile):
     destination=profile/'gateway-config.json'
     package=root/'internal/model-config.cfcfg'
@@ -115,6 +158,20 @@ def import_internal_config(root, profile):
         window.destroy()
 
 
+def import_bundled_skills(root,profile):
+    package=root/'internal/business-skills.cfskills'
+    if not package.is_file():
+        return {'status':'absent'}
+    try:
+        from content_factory_api.skill_bundle import import_bundle
+        result={'status':'ready',**import_bundle(package,profile/'analysis/skills/viral-skills.sqlite3')}
+    except Exception as exc:
+        result={'status':'failed','category':type(exc).__name__}
+        show_message('内部 Skill 包未能导入，已有 Skill 和资料不会被覆盖。软件仍可打开；请重新获取完整的内部 Skill 包。',error=True)
+    (profile/'runtime/skill-import.json').write_text(json.dumps(result,ensure_ascii=False),encoding='utf-8')
+    return result
+
+
 def run(root, profile, *, service_only=False):
     import msvcrt
     profile.mkdir(parents=True,exist_ok=True)
@@ -129,6 +186,7 @@ def run(root, profile, *, service_only=False):
             if not service_only: show_message('软件已经运行，请切换到已打开的窗口。')
             return 0
         import_internal_config(root,profile)
+        import_bundled_skills(root,profile)
         source_skill=root/'bundled-skills/huashu-douyin-script/SKILL.md'
         target_skill=profile/'skills/huashu-douyin-script/SKILL.md'
         if not target_skill.exists() and source_skill.is_file():
@@ -159,12 +217,12 @@ def run(root, profile, *, service_only=False):
                         raise RuntimeError('本地服务连续退出，任务会在下次启动时恢复。请导出诊断信息。')
                     server,_=start_service(root,profile,port)
                 time.sleep(.5)
-            return desktop.returncode
         finally:
             stop_service(server)
             if desktop is not None and desktop.poll() is None:
                 desktop.terminate()
                 desktop.wait(timeout=10)
+        return apply_pending_update(root,profile) or desktop.returncode
 
 
 def main():
@@ -175,7 +233,12 @@ def main():
     root=Path(__file__).resolve().parents[1]
     profile=(args.data_root or Path(os.environ['LOCALAPPDATA'])/'ContentFactory').resolve()
     try:
-        return run(root,profile,service_only=args.service_only)
+        result=run(root,profile,service_only=args.service_only)
+        if isinstance(result,Path):
+            subprocess.Popen([str(result/'runtime/python/pythonw.exe'),'-B',str(result/'scripts/installed_launcher.py'),'--data-root',str(profile)],
+                cwd=result,creationflags=subprocess.CREATE_NO_WINDOW)
+            return 0
+        return result
     except Exception as exc:
         diagnostic=profile/'runtime/startup-diagnostic.json'
         diagnostic.parent.mkdir(parents=True,exist_ok=True)

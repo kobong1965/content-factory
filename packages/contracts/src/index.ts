@@ -1,6 +1,6 @@
 export const PROJECT_NAME = "爆款内容工厂";
 export const PROJECT_ALIAS = "男装编剪器";
-export const PROJECT_VERSION = "0.1.30";
+export const PROJECT_VERSION = "0.1.31";
 
 export const jobStatuses = [
   "pending_analysis",

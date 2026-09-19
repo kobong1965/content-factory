@@ -20,6 +20,7 @@ from .subtitle_editor import router as subtitle_editor_router
 from .auto_edit import recover_auto_edit_queue, router as auto_edit_router
 from .local_exports import router as local_exports_router
 from .library_management import router as library_management_router
+from .software_updates import router as software_updates_router, update_gate
 from .s2 import _run_queue_safely as run_s2_recovered_queue, router as s2_router
 from .s3 import router as s3_router, start_analysis_worker, stop_analysis_worker
 from .s4 import router as s4_router
@@ -148,6 +149,8 @@ app.include_router(edit_batches_router)
 app.include_router(subtitle_editor_router)
 app.include_router(local_exports_router)
 app.include_router(library_management_router)
+app.include_router(software_updates_router)
+app.middleware('http')(update_gate)
 app.include_router(s8_router)
 
 

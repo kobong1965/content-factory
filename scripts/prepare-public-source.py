@@ -19,8 +19,8 @@ def main():
     payload=json.loads(args.private_config.read_text('utf-8'))
     secrets=[_unprotect_secret(m['protected_api_key']).encode() for m in payload['models']]
     args.output.mkdir(parents=True,exist_ok=False)
-    roots=['apps','services','workers','packages','scripts']
-    extensions={'.py','.pyw','.ps1','.cjs','.mjs','.js','.ts','.tsx','.json','.toml','.lock','.yaml','.yml','.css','.html','.svg','.png','.ico','.ttf','.woff2','.txt','.md','.nsi'}
+    roots=['apps','services','workers','packages','scripts','resources']
+    extensions={'.py','.pyw','.ps1','.cjs','.mjs','.js','.ts','.tsx','.json','.toml','.lock','.yaml','.yml','.css','.html','.svg','.png','.ico','.ttf','.woff2','.txt','.md','.nsi','.rs','.xml','.pub'}
     exclude={'node_modules','__pycache__','.pytest_cache','dist','target','gen','.cache'}
     files=[]
     for name in roots:

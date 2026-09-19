@@ -17,5 +17,10 @@ node_modules/
 **/gen/schemas/
 *.log
 .env
+*.cfskills
+*.cfcfg
+*.pem
+delivery-password.txt
+**/internal/
 .env.*
 !.env.example

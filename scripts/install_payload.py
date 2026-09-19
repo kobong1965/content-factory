@@ -57,6 +57,12 @@ def verify_payloads(source, manifest):
 
 
 def copy_internal_config(source, destination):
+    skills=source/'business-skills.cfskills'
+    skill_target=destination/'internal/business-skills.cfskills'
+    if skills.is_file() and not skill_target.exists():
+        skill_target.parent.mkdir(exist_ok=True)
+        with skills.open('rb') as incoming, skill_target.open('xb') as outgoing:
+            shutil.copyfileobj(incoming,outgoing)
     config=source/'model-config.cfcfg'
     target=destination/'internal/model-config.cfcfg'
     if config.is_file() and not target.exists():
@@ -94,7 +100,7 @@ def install(source, target, manifest, *, install_prerequisites=True):
             ensure_readiness_manifest(destination)
             return destination
         raise ValueError('Existing version is different; preserved without overwrite')
-    required = sum(part['unpacked_bytes'] for part in manifest['parts']) + 1024**3
+    required = sum(part['unpacked_bytes']+part['bytes'] for part in manifest['parts']) + 1024**3
     if shutil.disk_usage(target).free < required:
         raise ValueError('Not enough free disk space')
     stage = target / ('.install-' + uuid.uuid4().hex)
@@ -109,8 +115,14 @@ def install(source, target, manifest, *, install_prerequisites=True):
     # third-party material whose license has not been established.
     skill=stage/'bundled-skills/huashu-douyin-script/SKILL.md'
     skill.parent.mkdir(parents=True,exist_ok=True)
-    with urlopen('https://raw.githubusercontent.com/alchaincyf/huashu-skills/49a55ba8a975ebda6bb55ea5ca4388942e3f6f18/huashu-douyin-script/SKILL.md',timeout=45) as response:
-        content=response.read(128*1024+1)
+    internal_method=source/'huashu-analysis.SKILL.md'
+    if internal_method.is_file():
+        if internal_method.stat().st_size>128*1024:
+            raise ValueError('Analysis method too large')
+        content=internal_method.read_bytes()
+    else:
+        with urlopen('https://raw.githubusercontent.com/alchaincyf/huashu-skills/49a55ba8a975ebda6bb55ea5ca4388942e3f6f18/huashu-douyin-script/SKILL.md',timeout=45) as response:
+            content=response.read(128*1024+1)
     if hashlib.sha256(content).hexdigest()!='b6ca5501cecd2ae189cac70de531daa7afe0d24a06402635e99f16b02ca61068':
         raise ValueError('Pinned analysis method verification failed')
     skill.write_bytes(content)
@@ -158,6 +170,14 @@ def install(source, target, manifest, *, install_prerequisites=True):
     (stage/'installed-manifest.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2),encoding='utf-8')
     destination.parent.mkdir(exist_ok=True)
     stage.rename(destination)
+    cache=target/'component-cache'
+    cache.mkdir(exist_ok=True)
+    for part in manifest['parts']:
+        saved=cache/part['sha256']
+        if not saved.exists():
+            temporary=saved.with_suffix('.partial')
+            shutil.copyfile(source/part['name'],temporary)
+            temporary.replace(saved)
     return destination
 
 

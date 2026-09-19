@@ -1,6 +1,6 @@
 {
   "name": "content-factory",
-  "version": "0.1.30",
+  "version": "0.1.31",
   "private": true,
   "description": "爆款内容工厂（男装编剪器）工程工作区",
   "packageManager": "pnpm@11.19.0",
