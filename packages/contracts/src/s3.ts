@@ -12,7 +12,7 @@ export type AnalysisTaskStep = (typeof analysisTaskSteps)[number];
 
 export type GatewayApiMode = "responses" | "chat_completions";
 
-export const gatewayInputModalities = ["text", "image"] as const;
+export const gatewayInputModalities = ["text", "image", "audio"] as const;
 export type GatewayInputModality = (typeof gatewayInputModalities)[number];
 
 /**
@@ -23,7 +23,7 @@ export type GatewayInputModality = (typeof gatewayInputModalities)[number];
 export const gatewayProviders = ["openai", "qwen", "openai_compatible", "custom"] as const;
 export type GatewayProvider = (typeof gatewayProviders)[number];
 
-export const gatewayPurposes = ["analysis", "script", "material", "video_review"] as const;
+export const gatewayPurposes = ["analysis", "script", "material", "video_review", "speech"] as const;
 export type GatewayPurpose = (typeof gatewayPurposes)[number];
 
 export const gatewayPurposeRequirements = {
@@ -31,6 +31,7 @@ export const gatewayPurposeRequirements = {
   script: ["text"],
   material: ["text", "image"],
   video_review: ["text", "image"],
+  speech: ["audio"],
 } as const satisfies Readonly<Record<GatewayPurpose, readonly GatewayInputModality[]>>;
 
 type GatewayModelSettingsBase = Readonly<{
@@ -59,6 +60,7 @@ type GatewayRoutingBase = Readonly<{
   analysis: string | null;
   script: string | null;
   material: string | null;
+  speech?: string | null;
 }>;
 
 export type GatewayRoutingV20 = GatewayRoutingBase & Readonly<{

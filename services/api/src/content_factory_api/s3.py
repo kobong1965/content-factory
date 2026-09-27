@@ -6,6 +6,8 @@ import logging
 import os
 import threading
 import time
+import wave
+from io import BytesIO
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Literal
@@ -273,8 +275,8 @@ class GatewayModelSettingsRequest(BaseModel):
     base_url: str = Field(min_length=1, max_length=500)
     model: str = Field(min_length=1, max_length=120)
     api_mode: GatewayApiMode
-    modalities: list[GatewayInputModality] = Field(min_length=1, max_length=2)
-    purposes: list[GatewayPurpose] = Field(min_length=1, max_length=4)
+    modalities: list[GatewayInputModality] = Field(min_length=1, max_length=3)
+    purposes: list[GatewayPurpose] = Field(min_length=1, max_length=5)
     enabled: bool = True
     # SecretStr prevents FastAPI/Pydantic validation details from echoing a
     # rejected credential. Identity/key changes are rejected by the PUT route
@@ -288,6 +290,7 @@ class GatewayRoutingResponse(BaseModel):
     script: str | None
     material: str | None
     video_review: str | None
+    speech: str | None = None
 
 
 class GatewayRoutingRequest(BaseModel):
@@ -298,6 +301,9 @@ class GatewayRoutingRequest(BaseModel):
     # Optional only for pre-2.1 clients. The store migrates it to the visual
     # analysis route and every 2.1 response always contains the explicit key.
     video_review: str | None = Field(default=None, pattern=r"^[a-z][a-z0-9_-]{2,63}$")
+    # Optional: local ASR remains the default; this route enables the API
+    # fallback when the saved model exposes an OpenAI-compatible transcription endpoint.
+    speech: str | None = Field(default=None, pattern=r"^[a-z][a-z0-9_-]{2,63}$")
 
 
 class GatewaySettingsResponse(BaseModel):
@@ -345,6 +351,7 @@ class GatewayConnectRequest(GatewayDiscoveryRequest):
         pattern=r"^[A-Za-z0-9][A-Za-z0-9._:/-]{0,119}$",
     )
     manual_model_id: bool = False
+    capability: Literal["vision", "speech"] = "vision"
 
 
 class DiscoveredModelResponse(BaseModel):
@@ -637,7 +644,12 @@ def _resolve_discovery_secret(request: GatewayDiscoveryRequest) -> tuple[str, st
     return normalized, profile.api_key
 
 
-def _selected_catalog_model(catalog: ModelCatalog, upstream_model_id: str) -> DiscoveredModel:
+def _selected_catalog_model(
+    catalog: ModelCatalog,
+    upstream_model_id: str,
+    *,
+    capability: Literal["vision", "speech"] = "vision",
+) -> DiscoveredModel:
     selected = next(
         (item for item in catalog.models if item.upstream_model_id == upstream_model_id),
         None,
@@ -650,12 +662,17 @@ def _selected_catalog_model(catalog: ModelCatalog, upstream_model_id: str) -> Di
                 "model_not_in_catalog",
             ),
         )
-    if selected.input_modalities is not None and "image" not in selected.input_modalities:
+    required_modality = "image" if capability == "vision" else "audio"
+    if selected.input_modalities is not None and required_modality not in selected.input_modalities:
         raise HTTPException(
             status_code=422,
             detail=_gateway_error_detail(
-                "所选模型的官方目录未声明图片输入能力，不能承担视频分析任务",
-                "image_input_unsupported",
+                (
+                    "所选模型的官方目录未声明图片输入能力，不能承担视频分析任务"
+                    if capability == "vision"
+                    else "所选模型的官方目录未声明音频输入能力，不能承担语音转写任务"
+                ),
+                "image_input_unsupported" if capability == "vision" else "audio_input_unsupported",
             ),
         )
     return selected
@@ -751,6 +768,60 @@ def _probe_selected_model(
     raise last_error
 
 
+def _probe_selected_speech_model(
+    catalog: ModelCatalog,
+    selected: DiscoveredModel,
+    api_key: str,
+) -> tuple[GatewayConfig, int, str | None]:
+    """Verify an OpenAI-compatible transcription endpoint without user audio.
+
+    The probe uses a short generated WAV tone. It proves that the endpoint,
+    credential, model ID and JSON transcription contract are accepted. It
+    intentionally does not claim recognition quality from synthetic audio;
+    production subtitle generation still rejects responses without real word
+    timestamps.
+    """
+    from .speech_captions import SpeechRecognitionError, _recognize_api
+    from .deployment_paths import cache_root
+
+    audio = BytesIO()
+    with wave.open(audio, 'wb') as handle:
+        handle.setnchannels(1)
+        handle.setsampwidth(2)
+        handle.setframerate(16_000)
+        handle.writeframes(b'\x00\x00' * 4_000)
+    probe_root = cache_root('speech-probes')
+    probe_root.mkdir(parents=True, exist_ok=True)
+    probe_path = probe_root / f'gateway-{uuid4().hex}.wav'
+    probe_path.write_bytes(audio.getvalue())
+    started = time.perf_counter()
+    temporary = GatewayConfig(
+        base_url=catalog.normalized_base_url,
+        model=selected.upstream_model_id,
+        api_mode='chat_completions',
+        api_key=api_key,
+        updated_at=datetime.now(UTC).isoformat().replace('+00:00', 'Z'),
+        model_id='model_speech_probe',
+        display_name=selected.display_name,
+        modalities=('audio',),
+        purposes=('speech',),
+        provider=catalog.provider,
+    )
+    try:
+        result = _recognize_api(
+            probe_path, probe_root / 'result', config=temporary,
+            require_timestamps=False,
+        )
+    except SpeechRecognitionError as exc:
+        raise GatewayError(
+            f'语音转写接口验证失败：{exc}', retryable=False,
+            diagnostic_code=exc.code, endpoint_url=f'{catalog.normalized_base_url.rstrip("/")}/audio/transcriptions',
+        ) from exc
+    finally:
+        probe_path.unlink(missing_ok=True)
+    return temporary, round((time.perf_counter() - started) * 1000), None
+
+
 @router.get("/readiness", response_model=S3ReadinessResponse)
 def get_readiness() -> S3ReadinessResponse:
     config = _settings_store().load()
@@ -776,7 +847,7 @@ def get_readiness() -> S3ReadinessResponse:
     )
 
 
-@router.get("/gateway", response_model=GatewaySettingsResponse)
+@router.get("/gateway", response_model=GatewaySettingsResponse, response_model_exclude_none=True)
 def get_gateway_settings() -> GatewaySettingsResponse:
     return _public_settings()
 
@@ -839,8 +910,50 @@ def connect_gateway_model(
             display_name=request.upstream_model_id,
         )
     else:
-        selected = _selected_catalog_model(catalog, request.upstream_model_id)
+        selected = _selected_catalog_model(
+            catalog,
+            request.upstream_model_id,
+            capability=request.capability,
+        )
     store = _settings_store()
+    if request.capability == "speech":
+        try:
+            verified, latency_ms, response_id = _probe_selected_speech_model(
+                catalog, selected, api_key,
+            )
+            saved = store.upsert_verified_speech_model(
+                base_url=verified.base_url,
+                upstream_model_id=verified.model,
+                display_name=(selected.display_name.strip() or selected.upstream_model_id)[:60],
+                provider=verified.provider,
+                api_mode=verified.api_mode,
+                api_key=api_key,
+            )
+        except GatewayModelCapacityReached as exc:
+            raise HTTPException(
+                status_code=409,
+                detail=_gateway_error_detail(str(exc), "gateway_model_capacity_reached"),
+            ) from exc
+        except GatewayError as exc:
+            raise HTTPException(
+                status_code=502,
+                detail=_gateway_error_detail(
+                    str(exc), exc.diagnostic_code or "speech_gateway_probe_failed",
+                    retryable=exc.retryable, upstream_status=exc.status_code,
+                    endpoint_url=exc.endpoint_url,
+                ),
+            ) from exc
+        except GatewaySettingsError as exc:
+            raise HTTPException(status_code=400, detail=_gateway_error_detail(str(exc), "invalid_gateway_settings")) from exc
+        from .s5 import _run_queue_safely as run_script_queue
+        background_tasks.add_task(run_script_queue)
+        connected = saved.for_purpose("speech")
+        return GatewayConnectResponse(
+            connected_model_id=connected.model_id,
+            latency_ms=latency_ms,
+            response_id=response_id,
+            settings=GatewaySettingsResponse(**saved.public_dict()),
+        )
     try:
         with store.reserve_verified_model_capacity(
             base_url=catalog.normalized_base_url,

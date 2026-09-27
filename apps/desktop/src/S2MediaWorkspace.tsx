@@ -1,5 +1,6 @@
 import { FileDropInput } from "./FileDropInput";
-import { useRef, useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useUnsavedChanges } from './unsavedChanges';
 
 import { completionPercent } from "./media";
 import { ConfirmationDialog } from "./ConfirmationDialog";
@@ -13,8 +14,11 @@ const capabilityLabels = [
   ["queue_ready", "四路任务队列"],
 ] as const;
 
-export function S2MediaWorkspace({ media, compact = false }: { media: ReturnType<typeof useS2Media>; compact?: boolean }) {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+export function S2MediaWorkspace({ media, compact = false, afterUpload }: { media: ReturnType<typeof useS2Media>; compact?: boolean; afterUpload?: ReactNode }) {
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const uploadLock = useRef(false);
+  useUnsavedChanges(selectedFiles.length > 0, '待上传对标视频');
   const [link, setLink] = useState("");
   const [showQueueConfirm, setShowQueueConfirm] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -22,17 +26,21 @@ export function S2MediaWorkspace({ media, compact = false }: { media: ReturnType
 
   function handleFileSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (selectedFile) setShowQueueConfirm(true);
+    if (selectedFiles.length) setShowQueueConfirm(true);
   }
 
   async function confirmFileImport() {
-    if (!selectedFile) return;
-    const imported = await media.importFile(selectedFile);
-    if (imported) {
-      setSelectedFile(null);
-      if (fileInput.current) fileInput.current.value = "";
+    if (uploadLock.current) return;
+    uploadLock.current = true; setUploading(true);
+    try {
+      for (const file of selectedFiles) {
+        const imported = await media.importFile(file);
+        if (!imported) return;
+        setSelectedFiles(current => current.filter(f => f !== file));
+      }
+      if (fileInput.current) fileInput.current.value = '';
       setShowQueueConfirm(false);
-    }
+    } finally { uploadLock.current = false; setUploading(false); }
   }
 
   function handleLinkSubmit(event: FormEvent<HTMLFormElement>) {
@@ -58,18 +66,19 @@ export function S2MediaWorkspace({ media, compact = false }: { media: ReturnType
       title="确认加入本机处理队列"
       description="开始后会在本机生成代理视频、转写、镜头边界和关键帧；原片不会上传到云端。"
       confirmLabel="确认并开始处理"
-      busy={media.isSubmitting}
-      details={selectedFile && <><strong>{selectedFile.name}</strong><span>{(selectedFile.size / 1024 / 1024).toFixed(1)} MB</span></>}
+      busy={uploading || media.isSubmitting}
+      details={<span>{selectedFiles.length} 条视频 · {(selectedFiles.reduce((sum,f) => sum + f.size, 0) / 1024 / 1024).toFixed(1)} MB</span>}
       onClose={() => setShowQueueConfirm(false)}
       onConfirm={() => void confirmFileImport()}
     />
 
     <section className="import-grid compact-import-grid" aria-label="视频导入方式">
       <form className="import-card import-card-primary" onSubmit={handleFileSubmit}>
-        <div><h2>选择电脑里的视频</h2><p>支持 MP4、MOV、MKV、AVI、WEBM、M4V。</p></div>
-        <label className="file-picker" htmlFor="video-file"><span>{selectedFile?.name ?? "还没有选择文件"}</span><strong>选择视频</strong></label>
-        <FileDropInput ref={fileInput} id="video-file" className="visually-hidden" type="file" accept="video/mp4,video/quicktime,video/x-matroska,video/x-msvideo,video/webm,.m4v" onChange={(event) => setSelectedFile(event.target.files?.[0] ?? null)} />
-        <button className="primary-button" type="submit" disabled={!selectedFile || media.isSubmitting}>加入处理队列</button>
+        <div><h2>上传对标视频</h2><p>支持多选或拖入 MP4、MOV、MKV、AVI、WEBM、M4V。</p></div>
+        <label className="file-picker" htmlFor="video-file"><span>{selectedFiles.length ? `已选 ${selectedFiles.length} 条视频` : "还没有选择文件"}</span><strong>选择视频</strong></label>
+        <FileDropInput ref={fileInput} id="video-file" multiple disabled={uploading} className="visually-hidden" type="file" accept="video/mp4,video/quicktime,video/x-matroska,video/x-msvideo,video/webm,.m4v" onChange={event => { const added=Array.from(event.target.files ?? []); setSelectedFiles(current => [...current, ...added.filter(f => !current.some(c => c.name===f.name && c.size===f.size && c.lastModified===f.lastModified))]); event.target.value=''; }} />
+        {selectedFiles.length > 0 && <ul className="benchmark-files">{selectedFiles.map((f,i) => <li key={`${f.name}-${f.size}-${f.lastModified}`}><span>{f.name}</span><button type="button" className="text-button" disabled={uploading} onClick={() => setSelectedFiles(current => current.filter((_,n) => n!==i))}>移除</button></li>)}</ul>}
+        <button className="primary-button" type="submit" disabled={!selectedFiles.length || uploading || media.isSubmitting}>{uploading ? '正在上传…' : '加入处理队列'}</button>
       </form>
       {!compact && <form className="import-card" onSubmit={handleLinkSubmit}>
         <div><h2>检查抖音链接</h2><p>只识别地址，不抓取平台内容；请使用有权使用的原视频。</p></div>
@@ -80,6 +89,7 @@ export function S2MediaWorkspace({ media, compact = false }: { media: ReturnType
     </section>
 
     {media.actionMessage && <div className="action-message" role="status" aria-live="polite">{media.actionMessage}</div>}
+    {afterUpload}
 
     <section aria-labelledby="queue-title">
       <div className="section-heading">

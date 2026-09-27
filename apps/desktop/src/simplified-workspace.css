@@ -1,5 +1,9 @@
-.simplified-heading { padding-bottom:0; }
-.simplified-steps { display:flex; flex-wrap:wrap; gap:12px; margin-top:24px; }
+.simplified-heading { padding-bottom:0; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:16px; }
+.simplified-heading h1 { font-size:26px; margin:0; }
+.simplified-steps { display:flex; flex-wrap:wrap; gap:12px; margin-top:0; }
+.benchmark-files { max-height:180px; overflow:auto; list-style:none; padding:0; margin:0; }
+.benchmark-files li { display:flex; justify-content:space-between; gap:16px; border-bottom:1px solid var(--line); padding:8px; }
+.benchmark-files span { overflow-wrap:anywhere; min-width:0; }
 .simplified-steps [aria-current="step"] { border-color:var(--primary); color:var(--primary); background:var(--primary-soft); }
 .simplified-upload .import-grid { grid-template-columns:minmax(0,1fr); }
 .batch-folder-list { display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,320px),1fr)); gap:16px; margin-top:24px; }

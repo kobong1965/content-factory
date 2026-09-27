@@ -1,3 +1,6 @@
+import {
+  gatewayPurposeRequirements,
+} from "@content-factory/contracts";
 import type {
   GatewayApiMode,
   GatewayInputModality,
@@ -30,6 +33,7 @@ export const purposeOptions: ReadonlyArray<{
   { value: "analysis", label: "爆点研究", detail: "口播 + OCR + 关键帧图片", needsImage: true },
   { value: "material", label: "素材识别", detail: "文字 + 关键帧图片", needsImage: true },
   { value: "script", label: "脚本生成", detail: "商品事实 + 结构化文字", needsImage: false },
+  { value: "speech", label: "原音识别（API 备用）", detail: "本地 ASR 不可用时使用音频转写接口", needsImage: false },
 ];
 
 export const providerPresets: ReadonlyArray<{
@@ -134,16 +138,23 @@ export function matchingSavedCredentialModelId(
 export function selectableDiscoveredModels(
   models: ReadonlyArray<GatewayDiscoveredModel>,
   query = "",
+  capability: "vision" | "speech" = "vision",
 ): GatewayDiscoveredModel[] {
   const normalizedQuery = query.trim().toLocaleLowerCase("zh-CN");
   return models.filter((model) => {
     const providerMetadata = model.capability_source === "provider_metadata";
+    if (capability === "speech") {
+      const explicitlyLacksAudio = providerMetadata
+        && model.input_modalities !== null
+        && !model.input_modalities.includes("audio");
+      if (explicitlyLacksAudio) return false;
+    }
     const explicitlyLacksImage = providerMetadata
       && model.input_modalities !== null
       && !model.input_modalities.includes("image");
     const explicitlyLacksStructuredOutput = providerMetadata
       && model.supports_structured_output === false;
-    if (explicitlyLacksImage || explicitlyLacksStructuredOutput) return false;
+    if (capability === "vision" && (explicitlyLacksImage || explicitlyLacksStructuredOutput)) return false;
     if (!normalizedQuery) return true;
     return `${model.upstream_model_id} ${model.display_name}`
       .toLocaleLowerCase("zh-CN")
@@ -153,13 +164,14 @@ export function selectableDiscoveredModels(
 
 export function discoveredModelCapabilityLabel(model: GatewayDiscoveredModel): string {
   if (model.capability_source === "unknown") return "图文与结构化能力待实测";
+  const audio = model.input_modalities?.includes("audio") ? "音频" : "不支持音频";
   const image = model.input_modalities === null
     ? "图片待实测"
     : model.input_modalities.includes("image") ? "图文" : "不支持图片";
   const structured = model.supports_structured_output === null
     ? "结构化待实测"
     : model.supports_structured_output ? "结构化" : "不支持结构化";
-  return `${image} · ${structured}`;
+  return `${image} · ${structured} · ${audio}`;
 }
 
 export function buildAdvancedGatewayModels(
@@ -198,6 +210,7 @@ export function verifiedRouteCount(
   routing: ActiveRouting,
 ): number {
   return purposeOptions.filter((purpose) => {
+    if (!routing[purpose.value]) return false;
     const model = models.find((item) => item.model_id === routing[purpose.value] && item.api_key_configured);
     return model ? supportsPurpose(model, purpose.value) : false;
   }).length;
@@ -227,7 +240,9 @@ export function createDraft(index: number, provider: GatewayProvider = "openai_c
     model: "",
     api_mode: preset.apiMode,
     modalities: ["text", "image"],
-    purposes: purposeOptions.map((purpose) => purpose.value),
+    // The visual/structured probe does not verify multipart audio
+    // transcription. Speech is opt-in only after an explicit audio probe.
+    purposes: purposeOptions.filter((purpose) => purpose.value !== "speech").map((purpose) => purpose.value),
     enabled: true,
     api_key: "",
     api_key_configured: false,
@@ -239,7 +254,7 @@ export function toDraft(model: GatewayModelSettings): DraftModel {
   const purposes = model.purposes.length
     ? [...model.purposes]
     : model.modalities.includes("image")
-      ? purposeOptions.map((purpose) => purpose.value)
+      ? purposeOptions.filter((purpose) => purpose.value !== "speech").map((purpose) => purpose.value)
       : (["script"] satisfies GatewayPurpose[]);
   return {
     model_id: model.model_id,
@@ -267,7 +282,7 @@ export function applyProviderPreset(model: DraftModel, provider: GatewayProvider
     model: "",
     api_mode: preset.apiMode,
     modalities: ["text", "image"],
-    purposes: purposeOptions.map((purpose) => purpose.value),
+    purposes: purposeOptions.filter((purpose) => purpose.value !== "speech").map((purpose) => purpose.value),
     api_key: "",
     api_key_configured: false,
   };
@@ -291,7 +306,7 @@ export function initialGatewayDraftState(gateway: GatewaySettings): { models: Dr
     models,
     routing: Object.fromEntries(purposeOptions.map((purpose) => [
       purpose.value,
-      savedRouting[purpose.value] ?? (purpose.needsImage ? savedRouting.analysis ?? firstVision : firstText),
+      savedRouting[purpose.value] ?? (purpose.value === "speech" ? "" : purpose.needsImage ? savedRouting.analysis ?? firstVision : firstText),
     ])) as ActiveRouting,
   };
 }
@@ -301,8 +316,8 @@ export function purposeNeedsImage(purpose: GatewayPurpose): boolean {
 }
 
 export function supportsPurpose(model: DraftModel, purpose: GatewayPurpose): boolean {
-  if (!model.enabled || !model.modalities.includes("text") || !model.purposes.includes(purpose)) return false;
-  return !purposeNeedsImage(purpose) || model.modalities.includes("image");
+  if (!model.enabled || !model.purposes.includes(purpose)) return false;
+  return gatewayPurposeRequirements[purpose].every((modality) => model.modalities.includes(modality));
 }
 
 export function setImageCapability(model: DraftModel, enabled: boolean): DraftModel {

@@ -151,9 +151,10 @@ describe("S3 deep analysis contracts", () => {
     };
 
     expect(gatewayProviders).toEqual(["openai", "qwen", "openai_compatible", "custom"]);
-    expect(gatewayInputModalities).toEqual(["text", "image"]);
-    expect(gatewayPurposes).toEqual(["analysis", "script", "material", "video_review"]);
+    expect(gatewayInputModalities).toEqual(["text", "image", "audio"]);
+    expect(gatewayPurposes).toEqual(["analysis", "script", "material", "video_review", "speech"]);
     expect(gatewayPurposeRequirements.video_review).toEqual(["text", "image"]);
+    expect(gatewayPurposeRequirements.speech).toEqual(["audio"]);
     expect(settings.routing.analysis).toBe(settings.default_model_id);
     expect(settings.routing.video_review).toBe("model_gpt");
     expect(settings.models.map((model) => model.provider)).toEqual(["openai", "qwen"]);

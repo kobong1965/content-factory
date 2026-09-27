@@ -14,6 +14,7 @@ from content_factory_api import s3, s5
 from content_factory_api.main import app
 from content_factory_api.s3_gateway import GatewayError, GatewayResult, parse_gateway_response
 from content_factory_api.s3_model_catalog import DiscoveredModel, ModelCatalog, ModelDiscoveryError
+from content_factory_api.s3_settings import GatewayConfig
 
 
 @pytest.fixture(autouse=True)
@@ -421,6 +422,71 @@ def test_gateway_connect_probes_exact_model_before_atomic_save_and_routes_all_ta
     assert response.json()["connected_model_id"] == selected["model_id"]
     assert all(value == selected["model_id"] for value in settings["routing"].values())
     assert "new-qwen-secret-key" not in response.text
+
+
+def test_gateway_connect_speech_capability_verifies_and_routes_audio_model(
+    monkeypatch,
+    tmp_path: Path,
+) -> None:
+    client = _configure(monkeypatch, tmp_path)
+
+    def audio_catalog(base_url: str, model: str = "relay-asr") -> ModelCatalog:
+        return ModelCatalog(
+            provider="openai_compatible",
+            normalized_base_url=base_url,
+            catalog_source="openai_models",
+            models=(DiscoveredModel(
+                upstream_model_id=model,
+                display_name="Relay ASR",
+                input_modalities=("audio",),
+                output_modalities=("text",),
+                supports_structured_output=False,
+                capability_source="provider_metadata",
+            ),),
+        )
+
+    monkeypatch.setattr(
+        s3,
+        "discover_models",
+        lambda **kwargs: audio_catalog(kwargs["base_url"]),
+    )
+    monkeypatch.setattr(
+        s3,
+        "_probe_selected_speech_model",
+        lambda catalog, selected, api_key: (
+            GatewayConfig(
+                base_url=catalog.normalized_base_url,
+                model=selected.upstream_model_id,
+                api_mode="chat_completions",
+                api_key=api_key,
+                updated_at="2026-09-27T00:00:00Z",
+                model_id="model_speech_probe",
+                display_name=selected.display_name,
+                modalities=("audio",),
+                purposes=("speech",),
+                provider=catalog.provider,
+            ),
+            12,
+            "speech-probe",
+        ),
+    )
+
+    response = client.post("/s3/gateway/connect", json={
+        "base_url": "https://api.apikey.fan",
+        "api_key": "speech-secret-key",
+        "upstream_model_id": "relay-asr",
+        "capability": "speech",
+    })
+
+    assert response.status_code == 200, response.text
+    assert response.json()["response_id"] == "speech-probe"
+    settings = client.get("/s3/gateway").json()
+    speech_model_id = settings["routing"]["speech"]
+    selected = next(item for item in settings["models"] if item["model_id"] == speech_model_id)
+    assert selected["model"] == "relay-asr"
+    assert selected["modalities"] == ["audio"]
+    assert selected["purposes"] == ["speech"]
+    assert "speech-secret-key" not in response.text
 
 
 def test_gateway_connect_accepts_qwen_singleton_array_and_ascii_lowercase_visual_token(

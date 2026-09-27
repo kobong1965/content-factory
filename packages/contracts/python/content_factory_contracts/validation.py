@@ -1626,12 +1626,14 @@ def _gateway_settings_issues(document: Mapping[str, Any]) -> list[str]:
         "script": {"text"},
         "material": {"text", "image"},
         "video_review": {"text", "image"},
+        "speech": {"audio"},
     }
     labels = {
         "analysis": "深度分析",
         "script": "脚本生成",
         "material": "素材识别",
         "video_review": "视频审核",
+        "speech": "原音识别（API 备用）",
     }
 
     for model in models:

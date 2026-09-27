@@ -15,9 +15,9 @@ function BatchSkuField({ batch, busy, save }: { batch: FootageBatch; busy: boole
   </form>;
 }
 
-export function FootageBatchPanel({ compact = false }: { compact?: boolean }) {
+export function FootageBatchPanel({ compact = false, initialBatchId }: { compact?: boolean; initialBatchId?: string }) {
   const [batches, setBatches] = useState<FootageBatch[]>([]);
-  const [batchId, setBatchId] = useState('');
+  const [batchId, setBatchId] = useState(initialBatchId ?? '');
   const [candidateId, setCandidateId] = useState('');
   const [note, setNote] = useState('');
   const actor = "本机";
@@ -39,11 +39,12 @@ export function FootageBatchPanel({ compact = false }: { compact?: boolean }) {
   useEffect(() => {
     const controller = new AbortController();
     fetchFootageBatches(controller.signal).then(result => {
-      setBatches(result.batches); setNote(result.batches[0]?.candidates[0]?.review_note ?? '');
+      if (controller.signal.aborted) return;
+      setBatches(result.batches); setNote((result.batches.find(b => b.id === initialBatchId) ?? result.batches[0])?.candidates[0]?.review_note ?? '');
     }).catch(e => { if (!controller.signal.aborted) setError(e instanceof Error ? e.message : '批次读取失败'); })
       .finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
-  }, []);
+  }, [initialBatchId]);
 
   const act = async (operation: () => Promise<void>) => {
     if (lock.current) return;

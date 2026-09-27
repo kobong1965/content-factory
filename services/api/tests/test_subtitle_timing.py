@@ -32,3 +32,14 @@ def test_font_effect_are_burned_into_ass_and_srt_remains_plain(tmp_path):
     assert 'Default,KaiTi,68' in style
     assert '\\fad(100,100)' in style
     assert '\\c&H0000D4FF&' in style
+
+
+def test_subtitle_mode_preserves_sentence_sync_and_auto_variety():
+    from content_factory_api.auto_edit_worker import _caption_mode
+
+    assert _caption_mode({}, 0) == 'reveal'
+    assert _caption_mode({'subtitle_mode': 'sentence'}, 0) == 'sentence'
+    assert _caption_mode({'subtitle_mode': 'reveal'}, 0) == 'reveal'
+    assert [_caption_mode({'subtitle_mode': 'auto'}, i) for i in range(4)] == [
+        'sentence', 'highlight', 'reveal', 'sentence'
+    ]

@@ -1,6 +1,8 @@
 [CmdletBinding()]
 param(
-    [string]$RunRoot = ""
+    [string]$RunRoot = "",
+    [string[]]$AdditionalPythonPath = @(),
+    [string]$PythonExecutable = ''
 )
 
 $ErrorActionPreference = "Stop"
@@ -16,6 +18,7 @@ if (-not $runRootPath.StartsWith($allowedRoot, [System.StringComparison]::Ordina
 }
 
 $python = Join-Path $projectRoot ".venv\Scripts\python.exe"
+if ($PythonExecutable) { $python = $PythonExecutable }
 $desktopRoot = Join-Path $projectRoot "apps\desktop"
 $contractsRoot = Join-Path $projectRoot "packages\contracts"
 $desktopBin = Join-Path $desktopRoot "node_modules\.bin"
@@ -59,7 +62,7 @@ $env:PYTHONPATH = @(
     (Join-Path $projectRoot "packages\contracts\python"),
     (Join-Path $projectRoot "workers\media\src"),
     (Join-Path $projectRoot "services\api\src")
-) -join ";"
+) + $AdditionalPythonPath -join ";"
 New-Item -ItemType Directory -Force -Path $env:TEMP | Out-Null
 
 Write-Host "[1/7] Python contracts, API, queues, and FFmpeg integration"

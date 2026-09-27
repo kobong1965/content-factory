@@ -86,6 +86,8 @@ export type GatewayCredentialInput = {
   saved_model_id?: string;
 };
 
+export type GatewayConnectionCapability = "vision" | "speech";
+
 export type GatewayConnectionResult = {
   status: "ok";
   connected_model_id: string;
@@ -277,7 +279,7 @@ export async function discoverGatewayModels(
 }
 
 export async function connectGatewayModel(
-  input: GatewayCredentialInput & { upstream_model_id: string; manual_model_id?: boolean },
+  input: GatewayCredentialInput & { upstream_model_id: string; manual_model_id?: boolean; capability?: GatewayConnectionCapability },
   signal?: AbortSignal,
 ): Promise<GatewayConnectionResult> {
   const upstreamModelId = input.upstream_model_id;
@@ -289,6 +291,7 @@ export async function connectGatewayModel(
       ...gatewayCredentialBody(input),
       upstream_model_id: upstreamModelId,
       ...(input.manual_model_id ? { manual_model_id: true } : {}),
+      ...(input.capability ? { capability: input.capability } : {}),
     }),
     signal,
   }));

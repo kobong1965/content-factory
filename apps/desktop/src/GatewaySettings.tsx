@@ -86,6 +86,7 @@ export function GatewaySettings({ analysis, onDirtyChange }: {
     .filter((model) => model.api_key_configured)
     .map((model) => model.model_id));
   const routeIsValid = purposeOptions.every((purpose) => {
+    if (purpose.value === "speech" && !routing[purpose.value]) return true;
     const selected = models.find((model) => model.model_id === routing[purpose.value]);
     return selected && verifiedModelIds.has(selected.model_id) ? supportsPurpose(selected, purpose.value) : false;
   });
@@ -102,7 +103,7 @@ export function GatewaySettings({ analysis, onDirtyChange }: {
           : invalidDisplayName
             ? "请填写模型显示名称。"
             : !routeIsValid
-              ? "请为四类任务选择能力匹配的已启用模型。"
+              ? "请为已启用的任务选择能力匹配模型；原音识别 API 备用路由可以暂不配置。"
               : null;
   const manualFallbackBlocksAdvancedSave = manualFallbackModelId === selectedModelId;
   const saveDisabledReason = manualFallbackBlocksAdvancedSave
@@ -243,13 +244,14 @@ export function GatewaySettings({ analysis, onDirtyChange }: {
                     <select id={`route-${purpose.value}`} value={routing[purpose.value]} disabled={analysis.isSubmitting || gatewayOperationBusy} aria-describedby={analysis.isSubmitting || gatewayOperationBusy ? "gateway-save-description" : undefined} onChange={(event) => {
                       if (!analysis.isSubmitting && !gatewayOperationBusy) setRouting((current) => ({ ...current, [purpose.value]: event.target.value }));
                     }}>
+                      {purpose.value === "speech" && <option value="">暂不配置 API 备用</option>}
                       {models.map((item) => <option key={item.model_id} value={item.model_id} disabled={!verifiedModelIds.has(item.model_id) || !supportsPurpose(item, purpose.value)}>
                         {item.display_name || item.model || "未命名模型"}{verifiedModelIds.has(item.model_id) && supportsPurpose(item, purpose.value) ? "" : "（尚未验证或能力不匹配）"}
                       </option>)}
                     </select>
                   </label>)}
                 </div>
-                {!routeIsValid && <p className="routing-warning" role="alert">请为四类任务分配能力匹配的已启用模型。视频审核、爆点研究和素材识别需要图文输入能力。</p>}
+                {!routeIsValid && <p className="routing-warning" role="alert">请为已启用的任务分配能力匹配的模型。视频审核、爆点研究和素材识别需要图文输入能力；原音识别 API 备用路由可选。</p>}
               </section>
 
               <div className="multimodal-form-actions">

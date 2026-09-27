@@ -5,6 +5,7 @@ import {
   connectGatewayModel,
   discoverGatewayModels,
   type GatewayConnectionResult,
+  type GatewayConnectionCapability,
   type GatewayCredentialInput,
   type GatewayDiscoveredModel,
   type GatewayDiscoveryResult,
@@ -75,6 +76,7 @@ export function GatewayCatalogPicker({
   catalog,
   query,
   selectedModelId,
+  capability = "vision",
   disabled,
   fieldId,
   onQueryChange,
@@ -84,14 +86,15 @@ export function GatewayCatalogPicker({
   catalog: GatewayDiscoveryResult;
   query: string;
   selectedModelId: string;
+  capability?: GatewayConnectionCapability;
   disabled: boolean;
   fieldId: string;
   onQueryChange: (query: string) => void;
   onModelChange: (modelId: string) => void;
   onManualFallback: () => void;
 }) {
-  const selectable = selectableDiscoveredModels(catalog.models);
-  const matches = selectableDiscoveredModels(catalog.models, query);
+  const selectable = selectableDiscoveredModels(catalog.models, "", capability);
+  const matches = selectableDiscoveredModels(catalog.models, query, capability);
   const selected = selectable.find((model) => model.upstream_model_id === selectedModelId) ?? null;
   const options = selected && !matches.some((model) => model.upstream_model_id === selected.upstream_model_id)
     ? [selected, ...matches]
@@ -116,7 +119,7 @@ export function GatewayCatalogPicker({
       </label>
       <div className="gateway-catalog-count" role="status" aria-live="polite">
         <strong>{selectable.length} 个可验证候选</strong>
-        <span>服务商返回 {catalog.models.length} 个；已排除 {excludedCount} 个明确不支持图片或结构化输出的模型{query.trim() ? `；当前匹配 ${matches.length} 个` : ""}。</span>
+        <span>{capability === "speech" ? "语音转写候选" : "图文候选"}：服务商返回 {catalog.models.length} 个；已排除 {excludedCount} 个能力不匹配模型{query.trim() ? `；当前匹配 ${matches.length} 个` : ""}。</span>
       </div>
     </div>
 
@@ -141,7 +144,7 @@ export function GatewayCatalogPicker({
         {options.map((item) => <option value={item.upstream_model_id} key={item.upstream_model_id}>{optionLabel(item)}</option>)}
       </select>
       <small id={helpId}>{selected
-        ? `${selected.upstream_model_id} · 保存时仍会真实验证图文与结构化输出`
+        ? `${selected.upstream_model_id} · 保存时会真实验证${capability === "speech" ? " /audio/transcriptions 语音转写接口" : "图文与结构化输出"}`
         : "模型 ID 原样来自服务商，不会改写大小写、连字符或版本后缀。"}</small>
       {selected && <span className="gateway-selected-capabilities" aria-label={`目录能力：${discoveredModelCapabilityLabel(selected)}`}>
         {discoveredModelCapabilityLabel(selected).split(" · ").map((label) => <span key={label}>{label}</span>)}
@@ -206,6 +209,9 @@ export function GatewayQuickSetup({
   const [catalog, setCatalog] = useState<GatewayDiscoveryResult | null>(null);
   const [modelSearch, setModelSearch] = useState("");
   const [message, setMessage] = useState<string | null>(null);
+  const [capability, setCapability] = useState<GatewayConnectionCapability>(
+    model.purposes.includes("speech") ? "speech" : "vision",
+  );
   const [manualFallbackSource, setManualFallbackSource] = useState<ManualFallbackSource | null>(null);
   const requestVersion = useRef(0);
   const activeController = useRef<AbortController | null>(null);
@@ -219,8 +225,8 @@ export function GatewayQuickSetup({
   const enteredKeyIsValid = enteredKeyLength >= 8;
   const hasCredential = hasEnteredKey ? enteredKeyIsValid : Boolean(savedCredentialModelId);
   const selectableCatalog = useMemo(
-    () => selectableDiscoveredModels(catalog?.models ?? []),
-    [catalog],
+    () => selectableDiscoveredModels(catalog?.models ?? [], "", capability),
+    [catalog, capability],
   );
   const selectedCatalogModel = selectableCatalog.find((item) => item.upstream_model_id === model.model) ?? null;
   const catalogHasSelection = Boolean(selectedCatalogModel);
@@ -318,7 +324,7 @@ export function GatewayQuickSetup({
     try {
       const result = await discoverGatewayModels(credential, controller.signal);
       if (version !== requestVersion.current) return;
-      const candidates = selectableDiscoveredModels(result.models);
+      const candidates = selectableDiscoveredModels(result.models, "", capability);
       setCatalog(result);
       update({ provider: result.provider });
       if (!result.models.length) {
@@ -329,7 +335,7 @@ export function GatewayQuickSetup({
       if (!candidates.length) {
         update({ model: "" });
         setDiscoveryStatus("empty");
-        setMessage(`服务商返回 ${result.models.length} 个模型，但都明确不支持图片或结构化输出，不能用于当前四类任务。`);
+        setMessage(`服务商返回 ${result.models.length} 个模型，但没有找到当前连接用途所需的${capability === "speech" ? "音频转写" : "图文与结构化"}能力。`);
         return;
       }
       const preferred = preferredDiscoveredModelId(model.model, candidates);
@@ -339,7 +345,7 @@ export function GatewayQuickSetup({
         display_name: selected?.display_name || model.display_name,
       });
       setDiscoveryStatus("ready");
-      setMessage(`已从${providerLabels[result.provider]}读取 ${result.models.length} 个模型，筛出 ${candidates.length} 个图文候选。请选择后保存并验证。${result.truncated ? " 目录已截断，请留意下方提示。" : ""}`);
+      setMessage(`已从${providerLabels[result.provider]}读取 ${result.models.length} 个模型，筛出 ${candidates.length} 个${capability === "speech" ? "音频转写" : "图文"}候选。请选择后保存并验证。${result.truncated ? " 目录已截断，请留意下方提示。" : ""}`);
     } catch (error) {
       if (controller.signal.aborted || version !== requestVersion.current) return;
       setCatalog(null);
@@ -377,16 +383,17 @@ export function GatewayQuickSetup({
     activeController.current = controller;
     const version = ++requestVersion.current;
     setConnectionStatus("connecting");
-    setMessage(`正在验证 ${model.model} 的文字、图片和结构化输出能力…`);
+    setMessage(`正在验证 ${model.model} 的${capability === "speech" ? "语音转写接口和时间戳返回" : "文字、图片和结构化输出能力"}…`);
     try {
       const result = await connectGatewayModel({
         ...credential,
         upstream_model_id: catalogHasSelection ? model.model : model.model.trim(),
+        capability,
         ...(manualFallbackEnabled && !catalogHasSelection ? { manual_model_id: true } : {}),
       }, controller.signal);
       if (version !== requestVersion.current) return;
       setConnectionStatus("ready");
-      setMessage(`${model.model} 已通过图文验证并保存，四类任务已自动使用该模型。`);
+      setMessage(`${model.model} 已通过${capability === "speech" ? "语音转写接口" : "图文"}验证并保存。`);
       await onConnected(result);
     } catch (error) {
       if (controller.signal.aborted || version !== requestVersion.current) return;
@@ -429,6 +436,25 @@ export function GatewayQuickSetup({
     </div>
 
     <form className="gateway-quick-form" onSubmit={discover} noValidate>
+      <label className="gateway-quick-field gateway-quick-purpose" htmlFor={`quick-capability-${model.model_id}`}>
+        <span>连接用途</span>
+        <select
+          id={`quick-capability-${model.model_id}`}
+          value={capability}
+          disabled={identityInputsDisabled}
+          onChange={(event) => {
+            invalidatePendingRequest();
+            setCapability(event.target.value as GatewayConnectionCapability);
+            update({ model: "" });
+          }}
+        >
+          <option value="vision">图文模型 · 视频分析与规划</option>
+          <option value="speech">语音转写模型 · /audio/transcriptions</option>
+        </select>
+        <small>{capability === "speech"
+          ? "用于读取主播原声并返回 words/segments 时间戳；不会把文字模型冒充语音模型。"
+          : "用于关键帧、OCR 和结构化剪辑规划；不负责读取音频。"}</small>
+      </label>
       <label className="gateway-quick-field gateway-quick-url" htmlFor={`quick-url-${model.model_id}`}>
         <span>API 接口地址</span>
         <input
@@ -497,6 +523,7 @@ export function GatewayQuickSetup({
             catalog={catalog}
             query={modelSearch}
             selectedModelId={model.model}
+            capability={capability}
             disabled={identityInputsDisabled}
             fieldId={`quick-model-${model.model_id}`}
             onQueryChange={setModelSearch}

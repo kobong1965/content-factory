@@ -79,7 +79,7 @@ describe("multimodal gateway settings", () => {
     expect(gatewayModelLimitReachedDescription).not.toContain("完成或清理相关任务");
   });
 
-  it("creates selectable GPT and Qwen profiles for all four tasks", () => {
+  it("creates selectable GPT and Qwen profiles without falsely claiming speech capability", () => {
     const gpt = createDraft(1, "openai");
     const qwen = createDraft(2, "qwen");
 
@@ -91,12 +91,14 @@ describe("multimodal gateway settings", () => {
     expect(providerPresets.find((preset) => preset.value === "qwen")?.description).toContain("地域匹配");
     expect(providerPresets.find((preset) => preset.value === "qwen")?.description).toContain("qwen3.7-plus");
     expect(purposeOptions.map((purpose) => purpose.value)).toEqual([
-      "video_review", "analysis", "material", "script",
+      "video_review", "analysis", "material", "script", "speech",
     ]);
     for (const purpose of purposeOptions) {
-      expect(supportsPurpose(gpt, purpose.value)).toBe(true);
-      expect(supportsPurpose(qwen, purpose.value)).toBe(true);
+      expect(supportsPurpose(gpt, purpose.value)).toBe(purpose.value !== "speech");
+      expect(supportsPurpose(qwen, purpose.value)).toBe(purpose.value !== "speech");
     }
+    const speechModel: DraftModel = { ...gpt, modalities: ["text", "audio"], purposes: [...gpt.purposes, "speech"] };
+    expect(supportsPurpose(speechModel, "speech")).toBe(true);
   });
 
   it("selects the exact catalog id when a saved model differs only by case", () => {

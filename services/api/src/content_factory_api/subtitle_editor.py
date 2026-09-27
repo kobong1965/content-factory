@@ -55,7 +55,7 @@ def validate_document(doc,duration):
         raise ValueError('字幕最多1000句')
     end=0
     for cue in doc['cues']:
-        if not isinstance(cue,dict) or not {'start_ms','end_ms','text'}.issubset(cue) or set(cue)-{'start_ms','end_ms','text','words','uncertain','original_text'} or not isinstance(cue['text'],str) or not 1<=len(cue['text'].strip())<=200:
+        if not isinstance(cue,dict) or not {'start_ms','end_ms','text'}.issubset(cue) or set(cue)-{'start_ms','end_ms','text','words','uncertain','original_text','semantic_reason','semantic_confidence','alignment_source'} or not isinstance(cue['text'],str) or not 1<=len(cue['text'].strip())<=200:
             raise ValueError('每句字幕需为1—200字，不能留空')
         if type(cue['start_ms']) is not int or type(cue['end_ms']) is not int or not end<=cue['start_ms']<cue['end_ms']<=duration:
             raise ValueError('字幕时间不能重叠、逆序或超出视频，请调整时间后保存')

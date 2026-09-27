@@ -18,15 +18,15 @@ from urllib.parse import urlparse
 from uuid import uuid4
 
 GatewayApiMode = Literal["responses", "chat_completions"]
-GatewayInputModality = Literal["text", "image"]
+GatewayInputModality = Literal["text", "image", "audio"]
 GatewayProvider = Literal["openai", "qwen", "openai_compatible", "custom"]
-GatewayPurpose = Literal["analysis", "script", "material", "video_review"]
+GatewayPurpose = Literal["analysis", "script", "material", "video_review", "speech"]
 _LOCAL_HOSTS = {"localhost", "127.0.0.1", "::1"}
 _CRYPTPROTECT_UI_FORBIDDEN = 0x01
 _MODEL_ID_PATTERN = re.compile(r"^[a-z][a-z0-9_-]{2,63}$")
-_VALID_MODALITIES = ("text", "image")
+_VALID_MODALITIES = ("text", "image", "audio")
 _VALID_PROVIDERS = ("openai", "qwen", "openai_compatible", "custom")
-_VALID_PURPOSES = ("analysis", "script", "material", "video_review")
+_VALID_PURPOSES = ("analysis", "script", "material", "video_review", "speech")
 _QWEN_REGIONAL_DASHSCOPE_HOST = re.compile(
     r"^dashscope-[a-z0-9-]+\.aliyuncs\.com$"
 )
@@ -35,12 +35,17 @@ _PURPOSE_REQUIREMENTS = {
     "script": frozenset(("text",)),
     "material": frozenset(("text", "image")),
     "video_review": frozenset(("text", "image")),
+    # Audio transcription is a distinct API capability.  A normal
+    # text/image chat model must never be promoted to speech fallback merely
+    # because it can accept a text prompt.
+    "speech": frozenset(("audio",)),
 }
 _PURPOSE_LABELS = {
     "analysis": "深度分析",
     "script": "脚本生成",
     "material": "素材识别",
     "video_review": "视频审核",
+    "speech": "原音识别（API 备用）",
 }
 _STORE_LOCKS_GUARD = threading.Lock()
 _STORE_LOCKS: dict[Path, threading.RLock] = {}
@@ -391,7 +396,13 @@ class GatewayConfig:
             "api_key_configured": any(item.enabled and bool(item.api_key) for item in self.available_models()),
             "default_model_id": self.model_id,
             "models": [item.public_dict() for item in self.available_models()],
-            "routing": {purpose: self.routing.get(purpose) for purpose in _VALID_PURPOSES},
+            # Keep legacy four-route responses byte/shape compatible; expose
+            # the optional speech route only when it was explicitly configured.
+            "routing": {
+                purpose: self.routing.get(purpose)
+                for purpose in _VALID_PURPOSES
+                if purpose != "speech" or purpose in self.routing
+            },
             "updated_at": self.updated_at,
         }
 
@@ -428,12 +439,14 @@ def _normalize_model(
         raise GatewaySettingsError("接口模式只能选择 responses 或 chat_completions")
     modalities = _ordered_values(raw.get("modalities"), _VALID_MODALITIES, "输入模态")
     purposes = _ordered_values(raw.get("purposes"), _VALID_PURPOSES, "使用场景")
-    if "text" not in modalities:
-        raise GatewaySettingsError("当前业务模型必须支持文本输入")
+    if "text" not in modalities and any(purpose != "speech" for purpose in purposes):
+        raise GatewaySettingsError("非语音任务模型必须支持文本输入")
     image_purposes = {"analysis", "material", "video_review"} & set(purposes)
     if image_purposes and "image" not in modalities:
         labels = "、".join(_PURPOSE_LABELS[purpose] for purpose in _VALID_PURPOSES if purpose in image_purposes)
         raise GatewaySettingsError(f"{labels}模型必须支持图片输入")
+    if "speech" in purposes and "audio" not in modalities:
+        raise GatewaySettingsError("原音识别（API 备用）模型必须声明 audio 输入能力")
     enabled = raw.get("enabled", True)
     if not isinstance(enabled, bool):
         raise GatewaySettingsError("模型启用状态格式不正确")
@@ -473,6 +486,10 @@ def _validated_routing(
     routing: dict[GatewayPurpose, str] = {}
     for purpose in _VALID_PURPOSES:
         model_id = str(raw.get(purpose) or "")
+        # Speech is an optional fallback route so old four-purpose settings
+        # remain valid until the user explicitly configures API transcription.
+        if purpose == "speech" and not model_id:
+            continue
         profile = model_map.get(model_id)
         required = _PURPOSE_REQUIREMENTS[purpose]
         if (
@@ -561,6 +578,19 @@ class GatewaySettingsStore:
                         if "analysis" in purposes and {"text", "image"}.issubset(modalities):
                             purposes.append("video_review")
                         normalized["purposes"] = purposes
+                    # 2.1.0 was written by versions that accidentally marked
+                    # every verified text/image model as a speech fallback.
+                    # Keep the user's encrypted file untouched, but sanitize
+                    # that stale capability in memory so a retry cannot send
+                    # audio to a chat-only endpoint.  A speech route becomes
+                    # valid only after an explicit audio-capable profile is
+                    # saved.
+                    modalities = set(normalized.get("modalities") or [])
+                    purposes = [
+                        purpose for purpose in list(normalized.get("purposes") or [])
+                        if purpose != "speech" or "audio" in modalities
+                    ]
+                    normalized["purposes"] = purposes
                     models.append(_normalize_model(normalized, existing_models={}))
                 if len({item.model_id for item in models}) != len(models):
                     raise KeyError("duplicate model_id")
@@ -571,6 +601,11 @@ class GatewaySettingsStore:
                 migrated_routing = dict(raw_routing)
                 if schema_version == "2.0.0" and not migrated_routing.get("video_review"):
                     migrated_routing["video_review"] = migrated_routing.get("analysis")
+                speech_model_id = str(migrated_routing.get("speech") or "")
+                if speech_model_id:
+                    speech_model = next((item for item in models if item.model_id == speech_model_id), None)
+                    if speech_model is None or "speech" not in speech_model.purposes or "audio" not in speech_model.modalities:
+                        migrated_routing.pop("speech", None)
                 routing = _validated_routing(migrated_routing, model_tuple)
                 default_model_id = str(payload.get("default_model_id") or routing["analysis"])
                 default = next((item for item in models if item.model_id == default_model_id and item.enabled), None)
@@ -681,7 +716,11 @@ class GatewaySettingsStore:
                         "purposes": ["analysis", "script", "material", "video_review"],
                         "enabled": True,
                     }]
-                    routing = {purpose: legacy_id for purpose in _VALID_PURPOSES}
+                    routing = {
+                        purpose: legacy_id
+                        for purpose in _VALID_PURPOSES
+                        if purpose != "speech"
+                    }
                 default_model_id = legacy_id
             if not 1 <= len(models) <= 8:
                 raise GatewaySettingsError("模型数量必须在 1 到 8 个之间")
@@ -710,7 +749,11 @@ class GatewaySettingsStore:
                 if existing is not None:
                     routing = existing.routing
                 else:
-                    routing = {purpose: model_ids[0] for purpose in _VALID_PURPOSES}
+                    routing = {
+                        purpose: model_ids[0]
+                        for purpose in _VALID_PURPOSES
+                        if purpose != "speech"
+                    }
             normalized_routing = _validated_routing(routing, normalized_models)
             selected_id = default_model_id or (
                 existing.model_id if existing and existing.model_id in model_ids else normalized_routing["analysis"]
@@ -807,7 +850,10 @@ class GatewaySettingsStore:
                         "api_mode": api_mode,
                         "api_key": api_key,
                         "modalities": ["text", "image"],
-                        "purposes": list(_VALID_PURPOSES),
+                        # The connect flow verifies text/image/structured
+                        # output only.  Do not claim audio transcription until
+                        # a dedicated /audio/transcriptions probe succeeds.
+                        "purposes": [purpose for purpose in _VALID_PURPOSES if purpose != "speech"],
                         "enabled": True,
                     })
                     replaced = True
@@ -834,10 +880,14 @@ class GatewaySettingsStore:
                     "api_mode": api_mode,
                     "api_key": api_key,
                     "modalities": ["text", "image"],
-                    "purposes": list(_VALID_PURPOSES),
+                    "purposes": [purpose for purpose in _VALID_PURPOSES if purpose != "speech"],
                     "enabled": True,
                 })
-            routing = {purpose: selected_model_id for purpose in _VALID_PURPOSES}
+            routing = {
+                purpose: selected_model_id
+                for purpose in _VALID_PURPOSES
+                if purpose != "speech"
+            }
             # RLock is intentionally re-entrant: keeping it held across the
             # final load/merge/save prevents another settings write from being
             # lost between a successful probe and the atomic os.replace().
@@ -845,6 +895,90 @@ class GatewaySettingsStore:
                 models=raw_models,
                 routing=routing,
                 default_model_id=selected_model_id,
+            )
+
+    def upsert_verified_speech_model(
+        self,
+        *,
+        base_url: str,
+        upstream_model_id: str,
+        display_name: str,
+        provider: GatewayProvider,
+        api_mode: GatewayApiMode,
+        api_key: str,
+    ) -> GatewayConfig:
+        """Merge a model only after a real ``/audio/transcriptions`` probe."""
+
+        normalized_url = validate_base_url(base_url)
+        with self._lock:
+            existing = self._load_unlocked() if self.path.is_file() else None
+            if existing is None:
+                raise GatewaySettingsError("请先保存一个图文模型，再添加语音转写 API")
+            profiles = list(existing.available_models())
+            matched = next(
+                (
+                    item for item in profiles
+                    if _connection_identity_url(item.base_url) == _connection_identity_url(normalized_url)
+                    and item.model == upstream_model_id
+                    and item.provider == provider
+                    and item.api_mode == api_mode
+                ),
+                None,
+            )
+            if matched is None and len(profiles) >= 8:
+                raise GatewayModelCapacityReached("已达到 8 个模型上限；当前连接不会复用现有已验证模型")
+            selected_model_id = matched.model_id if matched else f"model_{uuid4().hex[:16]}"
+            raw_models: list[dict[str, object]] = []
+            replaced = False
+            for item in profiles:
+                if item.model_id == selected_model_id:
+                    modalities = list(dict.fromkeys([*item.modalities, "audio"]))
+                    purposes = list(dict.fromkeys([*item.purposes, "speech"]))
+                    raw_models.append({
+                        "model_id": item.model_id,
+                        "display_name": display_name,
+                        "provider": item.provider,
+                        "base_url": normalized_url,
+                        "model": upstream_model_id,
+                        "api_mode": api_mode,
+                        "api_key": api_key,
+                        "modalities": modalities,
+                        "purposes": purposes,
+                        "enabled": True,
+                    })
+                    replaced = True
+                else:
+                    raw_models.append({
+                        "model_id": item.model_id,
+                        "display_name": item.display_name,
+                        "provider": item.provider,
+                        "base_url": item.base_url,
+                        "model": item.model,
+                        "api_mode": item.api_mode,
+                        "api_key": None,
+                        "modalities": list(item.modalities),
+                        "purposes": list(item.purposes),
+                        "enabled": item.enabled,
+                    })
+            if not replaced:
+                raw_models.append({
+                    "model_id": selected_model_id,
+                    "display_name": display_name,
+                    "provider": provider,
+                    "base_url": normalized_url,
+                    "model": upstream_model_id,
+                    "api_mode": api_mode,
+                    "api_key": api_key,
+                    "modalities": ["audio"],
+                    "purposes": ["speech"],
+                    "enabled": True,
+                })
+            routing = dict(existing.routing)
+            routing["speech"] = selected_model_id
+            return self.save(
+                models=raw_models,
+                routing=routing,
+                default_model_id=existing.model_id,
             )
 
     def update_verified_metadata(

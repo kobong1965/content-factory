@@ -23,7 +23,7 @@ async function main() {
     for (const label of ['素材分析', '视频剪辑', '成片素材库']) {
       if (await page.getByRole('button', { name: label, exact: true }).count() !== 1) throw new Error(`缺少一级入口：${label}`);
     }
-    if (!(await page.getByRole('heading', { name: '自动剪辑项目' }).isVisible())) throw new Error('视频剪辑首页未打开');
+    if (!(await page.getByRole('heading', { name: '剪辑项目', exact: true }).isVisible())) throw new Error('视频剪辑首页未打开');
     // The shell renders before the project-list request finishes; wait for the
     // persisted fixture instead of turning ordinary loading into a test race.
     await page.getByText('0.1.24 真实剪辑验收', { exact: true }).first().waitFor({ state: 'visible', timeout: 15000 });
@@ -42,15 +42,15 @@ async function main() {
     results.push('视频剪辑项目列表和真实持久化项目可见');
 
     await page.getByRole('button', { name: '新建项目' }).click();
-    for (const label of ['项目名称', '成片数量', '最短秒数', '最长秒数', '字幕字号', '重点词颜色', '重点词放大']) {
+    for (const label of ['项目名称', '成片数量', '硬下限（秒）', '硬上限（秒）', '字幕字号', '重点词颜色', '重点词放大']) {
       if (!(await page.getByText(label, { exact: true }).first().isVisible())) throw new Error(`新建项目缺少字段：${label}`);
     }
-    const controls = await page.locator('.auto-edit-create input').evaluateAll(nodes => nodes.map(node => ({ height: node.getBoundingClientRect().height, font: getComputedStyle(node).fontSize })));
+    const controls = await page.locator('.auto-edit-create input:not(.visually-hidden)').evaluateAll(nodes => nodes.map(node => ({ height: node.getBoundingClientRect().height, font: getComputedStyle(node).fontSize })));
     if (controls.some(item => item.height < 38 || Number.parseFloat(item.font) < 15)) throw new Error('项目输入控件尺寸低于阅读基线');
     results.push('新建项目字段完整且控件不低于 38px/15px');
 
     await page.getByRole('button', { name: '素材分析', exact: true }).click();
-    if (!(await page.getByRole('heading', { name: '对标素材分析' }).isVisible())) throw new Error('素材分析未独立成板块');
+    if (!(await page.getByRole('heading', { name: '对标素材与剪辑方法', exact: true }).isVisible())) throw new Error('素材分析未独立成板块');
     if (!(await page.getByRole('button', { name: /深度分析与 Skill 审核/ }).isVisible())) throw new Error('素材分析缺少 Skill 审核入口');
     results.push('素材分析与视频剪辑职责已分离');
 

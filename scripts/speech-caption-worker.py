@@ -6,6 +6,41 @@ import re
 import os
 
 
+def transcribe_checked(model, audio, *, hotwords='', audit_path=None):
+    """Reject decoder loops before alignment; retry the audio locally once.
+
+    A loop may have very high token probability, so probability is not a safe
+    acceptance gate. Never repair it by deleting repeated text or inventing time.
+    Manual forced alignment does not enter this automatic recognition path.
+    """
+    attempts = []
+    for recovery in (False, True):
+        options = dict(language='zh', beam_size=5, temperature=0,
+                       word_timestamps=True, vad_filter=True,
+                       vad_parameters={'min_silence_duration_ms': 300, 'speech_pad_ms': 200},
+                       hotwords=hotwords, condition_on_previous_text=True)
+        if recovery:
+            options.update(hotwords='', condition_on_previous_text=False,
+                           temperature=(0, .2, .4), repetition_penalty=1.1,
+                           no_repeat_ngram_size=6)
+        iterator, _ = model.transcribe(audio, **options)
+        segments = list(iterator)
+        full = re.sub(r'\W|_', '', ''.join(segment.text for segment in segments))
+        repetitive = any(len(match.group()) >= 18 for match in re.finditer(r'(.{1,8})\1{5,}', full))
+        invalid = repetitive or any('\ufffd' in segment.text or segment.compression_ratio > 4 for segment in segments)
+        attempts.append({
+            'mode': 'local_recovery' if recovery else 'standard', 'accepted': not invalid,
+            'segments': [{'text': s.text, 'start_ms': round(s.start * 1000),
+                          'end_ms': round(s.end * 1000), 'compression_ratio': s.compression_ratio,
+                          'avg_logprob': s.avg_logprob} for s in segments],
+        })
+        if audit_path is not None:
+            Path(audit_path).write_text(json.dumps(attempts, ensure_ascii=False, indent=2), encoding='utf-8')
+        if not invalid:
+            return segments, attempts
+    raise ValueError('本地语音识别出现异常重复，已从原音频重识别一次仍不合格，请核听；未生成伪造字幕')
+
+
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('--job',required=True)
     request=json.loads(Path(parser.parse_args().job).read_text(encoding='utf-8'))
@@ -15,7 +50,7 @@ def main():
     model=WhisperModel(request['model'],device='cpu',compute_type='int8',cpu_threads=6,num_workers=1,local_files_only=True)
     audio=decode_audio(request['audio'],sampling_rate=16000)
     duration=round(len(audio)/16)
-    raw=[];words=[]
+    raw=[];words=[];attempts=[]
     tokenizer=Tokenizer(model.hf_tokenizer,True,task='transcribe',language='zh')
     def units(items,offset=0):
         out=[];pending=''
@@ -49,11 +84,16 @@ def main():
             raise ValueError('存在无法对齐的字词，请核听或缩小修改范围')
         return aligned_words
     if request.get('cues') is None:
-        segments,info=model.transcribe(audio,language='zh',beam_size=5,temperature=0,word_timestamps=True,vad_filter=True,
-            vad_parameters={'min_silence_duration_ms':300,'speech_pad_ms':200},hotwords=request.get('hotwords',''),condition_on_previous_text=True)
+        segments,attempts=transcribe_checked(model,audio,hotwords=request.get('hotwords',''),
+            audit_path=Path(request['output']).with_suffix('.attempts.json'))
         for segment in segments:
             raw.append({'text':segment.text,'start_ms':round(segment.start*1000),'end_ms':round(segment.end*1000),'avg_logprob':segment.avg_logprob,'no_speech_prob':segment.no_speech_prob})
             observed=units([{'word':w.word,'start':w.start,'end':w.end,'probability':w.probability} for w in segment.words or []])
+            if request.get('word_timestamps_only'):
+                # Source selection needs observed word edges, not repeated
+                # character realignment of every phrase in a long recording.
+                words.extend(observed)
+                continue
             group=[]
             for word in observed:
                 if group and word['end_ms']-group[0]['start_ms']>27000:
@@ -78,7 +118,7 @@ def main():
     position=0
     for word in words:
         position+=len(word['text']);word['break_after']=position in boundaries
-    result={'engine':'faster-whisper-1.2.1/large-v3-turbo/cpu-int8','alignment':'cross-attention-DTW','duration_ms':duration,'raw_segments':raw,'words':words}
+    result={'engine':'faster-whisper-1.2.1/large-v3-turbo/cpu-int8','alignment':'asr-word-timestamps' if request.get('word_timestamps_only') and request.get('cues') is None else 'cross-attention-DTW','duration_ms':duration,'raw_segments':raw,'words':words,'recognition_attempts':attempts}
     Path(request['output']).write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding='utf-8')
 
 

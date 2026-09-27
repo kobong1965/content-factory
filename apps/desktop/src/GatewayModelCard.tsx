@@ -108,7 +108,7 @@ export function GatewayModelCard({
       <small>{gatewayModeLabel(identity.api_mode)}</small>
     </div>}
 
-    <p className="local-preprocess-note">音频先由本地 ASR 转写；视频先由本地抽帧和 OCR；云端模型接收必要文字与关键帧，不上传原视频。</p>
+    <p className="local-preprocess-note">音频优先由本地 ASR 转写；本地模型不可用时，可按“原音识别（API 备用）”路由使用已验证的音频转写接口。视频仍先由本地抽帧和 OCR；云端规划模型不接收原视频。</p>
 
     <div className="model-card-footer">
       <span id={testReasonId}>{testDisabledReason ?? "已保存，可重新实际测试文字、图片和结构化输出。"}</span>

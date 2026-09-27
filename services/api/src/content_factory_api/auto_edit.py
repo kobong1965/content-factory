@@ -20,6 +20,7 @@ from .auto_edit_store import (
     AutoEditConflictError,
     AutoEditNotFoundError,
     AutoEditProjectStore,
+    generation_check,
 )
 from .auto_edit_worker import process_one
 from .s3 import get_viral_skill_store
@@ -90,7 +91,7 @@ class StrictModel(BaseModel):
 
 
 class SettingsPayload(StrictModel):
-    target_count: int = Field(ge=1, le=10)
+    target_count: int = Field(ge=1, le=20)
     duration_min_ms: int = Field(ge=5_000, le=180_000)
     duration_max_ms: int = Field(ge=5_000, le=180_000)
     subtitle_font_size: int = Field(ge=32, le=120)
@@ -99,6 +100,8 @@ class SettingsPayload(StrictModel):
     top_title_enabled: bool = False
     subtitle_font: Literal['heiti', 'yahei', 'songti', 'kaiti'] = 'heiti'
     subtitle_effect: Literal['none', 'fade', 'pop'] = 'none'
+    subtitle_mode: Literal['sentence', 'reveal', 'highlight', 'auto', 'none'] = 'reveal'
+    duration_policy: Literal['custom', 'bounded_15_30'] = 'custom'
 
 
 class UpdateProjectRequest(StrictModel):
@@ -109,6 +112,10 @@ class UpdateProjectRequest(StrictModel):
 
 class RevisionRequest(StrictModel):
     expected_revision: int = Field(ge=1)
+
+
+class PurgeRequest(RevisionRequest):
+    confirmation_token: str = Field(min_length=1, max_length=200)
 
 
 def _raise_domain(exc: Exception) -> None:
@@ -127,6 +134,7 @@ async def create_auto_edit_project(
     settings_json: str = Form(max_length=10_000),
     source: UploadFile | None = File(default=None),
     sources: list[UploadFile] | None = File(default=None),
+    sku: str = Form(default='', max_length=100),
 ) -> dict[str, Any]:
     uploads = list(sources or []) + ([source] if source else [])
     if not 1 <= len(uploads) <= 20:
@@ -161,6 +169,7 @@ async def create_auto_edit_project(
             })
         return get_auto_edit_store().create_project(
             title=title,
+            sku=sku,
             sources=stored,
             settings=settings,
         )
@@ -176,7 +185,14 @@ async def create_auto_edit_project(
 @router.get("")
 def list_auto_edit_projects(deleted: bool = False) -> dict[str, Any]:
     projects = get_auto_edit_store().list_projects(deleted=deleted)
-    return {"projects": projects, "total": len(projects)}
+    return {"projects": [_with_generation_check(project) for project in projects], "total": len(projects)}
+
+
+def _with_generation_check(project: dict[str, Any]) -> dict[str, Any]:
+    # Ephemeral response metadata, not persisted state or a billable probe.
+    if not project.get('deleted_at') and project['status'] in {'draft', 'failed'}:
+        return {**project, 'generation_check': generation_check(project)}
+    return project
 
 
 @router.post('/{project_id}/trash')
@@ -187,10 +203,26 @@ def trash_auto_edit_project(project_id: str, request: RevisionRequest, restore: 
         _raise_domain(exc)
 
 
+@router.get('/{project_id}/purge-preview')
+def preview_auto_edit_purge(project_id: str, expected_revision: int):
+    try:
+        return get_auto_edit_store().preview_purge(project_id, expected_revision=expected_revision)
+    except Exception as exc:
+        _raise_domain(exc)
+
+
+@router.delete('/{project_id}/purge')
+def purge_auto_edit_project(project_id: str, request: PurgeRequest):
+    try:
+        return get_auto_edit_store().purge_project(project_id, expected_revision=request.expected_revision, confirmation_token=request.confirmation_token)
+    except Exception as exc:
+        _raise_domain(exc)
+
+
 @router.get("/{project_id}")
 def get_auto_edit_project(project_id: str) -> dict[str, Any]:
     try:
-        return get_auto_edit_store().get_project(project_id)
+        return _with_generation_check(get_auto_edit_store().get_project(project_id))
     except Exception as exc:
         _raise_domain(exc)
         raise
@@ -199,10 +231,11 @@ def get_auto_edit_project(project_id: str) -> dict[str, Any]:
 @router.patch("/{project_id}")
 def update_auto_edit_project(project_id: str, request: UpdateProjectRequest) -> dict[str, Any]:
     try:
-        return get_auto_edit_store().update_project(
+        project = get_auto_edit_store().update_project(
             project_id, expected_revision=request.expected_revision,
             title=request.title, settings=request.settings.model_dump(),
         )
+        return _with_generation_check(project)
     except Exception as exc:
         _raise_domain(exc)
         raise

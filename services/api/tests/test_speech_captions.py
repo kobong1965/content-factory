@@ -4,6 +4,28 @@ import pytest
 from content_factory_api.speech_captions import alignment_valid, display_events, split_words
 
 
+@pytest.mark.parametrize('source_only', [False, True])
+def test_source_word_timing_is_opt_in_and_caption_alignment_remains_default(tmp_path, monkeypatch, source_only):
+    import json
+    import subprocess
+    from pathlib import Path
+    from types import SimpleNamespace
+    from content_factory_api.speech_captions import recognize
+    model = tmp_path / 'model'
+    model.mkdir()
+    (model / 'model.bin').write_bytes(b'local-test')
+    monkeypatch.setenv('CONTENT_FACTORY_SPEECH_MODEL', str(model))
+    monkeypatch.setenv('CONTENT_FACTORY_USER_ROOT', str(tmp_path / 'user'))
+    def run(command, **kwargs):
+        job = json.loads(Path(command[-1]).read_text(encoding='utf-8'))
+        assert job['word_timestamps_only'] is source_only
+        Path(job['output']).write_text(json.dumps({'words':[]}), encoding='utf-8')
+        return SimpleNamespace(returncode=0, stderr=b'')
+    monkeypatch.setattr(subprocess, 'run', run)
+    options = {'word_timestamps_only':True} if source_only else {}
+    assert recognize(tmp_path/'source.mp4',tmp_path/'work',**options)['words']==[]
+
+
 def test_long_speech_is_short_cues_without_losing_or_splitting_words():
     tokens = ['大家', '看一下', '这条', '裤子', '它的', '裤脚口', '非常', '好看', '而且', '裤腰', '弹力', '很大', '穿着', '舒服']
     words = [{'text': text, 'start_ms': index * 430, 'end_ms': index * 430 + 400} for index, text in enumerate(tokens)]

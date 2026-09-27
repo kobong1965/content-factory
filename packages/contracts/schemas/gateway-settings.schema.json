@@ -85,16 +85,16 @@
         "modalities": {
           "type": "array",
           "minItems": 1,
-          "maxItems": 2,
+          "maxItems": 3,
           "uniqueItems": true,
-          "items": { "enum": ["text", "image"] }
+          "items": { "enum": ["text", "image", "audio"] }
         },
         "purposes": {
           "type": "array",
           "minItems": 1,
-          "maxItems": 4,
+          "maxItems": 5,
           "uniqueItems": true,
-          "items": { "enum": ["analysis", "script", "material", "video_review"] }
+          "items": { "enum": ["analysis", "script", "material", "video_review", "speech"] }
         },
         "enabled": { "type": "boolean" },
         "api_key_configured": { "type": "boolean" }
@@ -115,6 +115,9 @@
           "anyOf": [{ "$ref": "#/$defs/modelId" }, { "type": "null" }]
         },
         "video_review": {
+          "anyOf": [{ "$ref": "#/$defs/modelId" }, { "type": "null" }]
+        },
+        "speech": {
           "anyOf": [{ "$ref": "#/$defs/modelId" }, { "type": "null" }]
         }
       }

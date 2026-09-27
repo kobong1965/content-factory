@@ -1,0 +1,476 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-21T19:13:43Z",
+  "title": "Design System: 爆款内容工厂",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "钴蓝操作色",
+        "tonalRamp": [
+          "oklch(15% 0.1675 263.39)",
+          "oklch(26% 0.1675 263.39)",
+          "oklch(38% 0.1675 263.39)",
+          "oklch(49% 0.1675 263.39)",
+          "oklch(61% 0.1675 263.39)",
+          "oklch(72% 0.1675 263.39)",
+          "oklch(84% 0.1675 263.39)",
+          "oklch(95% 0.1675 263.39)"
+        ]
+      },
+      "primary-dark": {
+        "role": "primary",
+        "displayName": "深钴蓝",
+        "tonalRamp": [
+          "oklch(15% 0.1439 263.05)",
+          "oklch(26% 0.1439 263.05)",
+          "oklch(38% 0.1439 263.05)",
+          "oklch(49% 0.1439 263.05)",
+          "oklch(61% 0.1439 263.05)",
+          "oklch(72% 0.1439 263.05)",
+          "oklch(84% 0.1439 263.05)",
+          "oklch(95% 0.1439 263.05)"
+        ]
+      },
+      "primary-soft": {
+        "role": "primary",
+        "displayName": "浅蓝选择面",
+        "tonalRamp": [
+          "oklch(15% 0.0212 268.43)",
+          "oklch(26% 0.0212 268.43)",
+          "oklch(38% 0.0212 268.43)",
+          "oklch(49% 0.0212 268.43)",
+          "oklch(61% 0.0212 268.43)",
+          "oklch(72% 0.0212 268.43)",
+          "oklch(84% 0.0212 268.43)",
+          "oklch(95% 0.0212 268.43)"
+        ]
+      },
+      "navy": {
+        "role": "secondary",
+        "displayName": "海军蓝",
+        "tonalRamp": [
+          "oklch(15% 0.0681 258.83)",
+          "oklch(26% 0.0681 258.83)",
+          "oklch(38% 0.0681 258.83)",
+          "oklch(49% 0.0681 258.83)",
+          "oklch(61% 0.0681 258.83)",
+          "oklch(72% 0.0681 258.83)",
+          "oklch(84% 0.0681 258.83)",
+          "oklch(95% 0.0681 258.83)"
+        ]
+      },
+      "nav-text": {
+        "role": "secondary",
+        "displayName": "浅蓝导航文字",
+        "tonalRamp": [
+          "oklch(15% 0.0290 259.59)",
+          "oklch(26% 0.0290 259.59)",
+          "oklch(38% 0.0290 259.59)",
+          "oklch(49% 0.0290 259.59)",
+          "oklch(61% 0.0290 259.59)",
+          "oklch(72% 0.0290 259.59)",
+          "oklch(84% 0.0290 259.59)",
+          "oklch(95% 0.0290 259.59)"
+        ]
+      },
+      "nav-active": {
+        "role": "secondary",
+        "displayName": "冰蓝导航选择面",
+        "tonalRamp": [
+          "oklch(15% 0.0258 266.61)",
+          "oklch(26% 0.0258 266.61)",
+          "oklch(38% 0.0258 266.61)",
+          "oklch(49% 0.0258 266.61)",
+          "oklch(61% 0.0258 266.61)",
+          "oklch(72% 0.0258 266.61)",
+          "oklch(84% 0.0258 266.61)",
+          "oklch(95% 0.0258 266.61)"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "实体白工作面",
+        "tonalRamp": [
+          "oklch(15% 0.0000 89.88)",
+          "oklch(26% 0.0000 89.88)",
+          "oklch(38% 0.0000 89.88)",
+          "oklch(49% 0.0000 89.88)",
+          "oklch(61% 0.0000 89.88)",
+          "oklch(72% 0.0000 89.88)",
+          "oklch(84% 0.0000 89.88)",
+          "oklch(95% 0.0000 89.88)"
+        ]
+      },
+      "surface-soft": {
+        "role": "neutral",
+        "displayName": "浅蓝辅助面",
+        "tonalRamp": [
+          "oklch(15% 0.0115 264.51)",
+          "oklch(26% 0.0115 264.51)",
+          "oklch(38% 0.0115 264.51)",
+          "oklch(49% 0.0115 264.51)",
+          "oklch(61% 0.0115 264.51)",
+          "oklch(72% 0.0115 264.51)",
+          "oklch(84% 0.0115 264.51)",
+          "oklch(95% 0.0115 264.51)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "深墨标题",
+        "tonalRamp": [
+          "oklch(15% 0.0551 259.30)",
+          "oklch(26% 0.0551 259.30)",
+          "oklch(38% 0.0551 259.30)",
+          "oklch(49% 0.0551 259.30)",
+          "oklch(61% 0.0551 259.30)",
+          "oklch(72% 0.0551 259.30)",
+          "oklch(84% 0.0551 259.30)",
+          "oklch(95% 0.0551 259.30)"
+        ]
+      },
+      "text": {
+        "role": "neutral",
+        "displayName": "深色正文",
+        "tonalRamp": [
+          "oklch(15% 0.0515 257.53)",
+          "oklch(26% 0.0515 257.53)",
+          "oklch(38% 0.0515 257.53)",
+          "oklch(49% 0.0515 257.53)",
+          "oklch(61% 0.0515 257.53)",
+          "oklch(72% 0.0515 257.53)",
+          "oklch(84% 0.0515 257.53)",
+          "oklch(95% 0.0515 257.53)"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "次级文字",
+        "tonalRamp": [
+          "oklch(15% 0.0471 257.53)",
+          "oklch(26% 0.0471 257.53)",
+          "oklch(38% 0.0471 257.53)",
+          "oklch(49% 0.0471 257.53)",
+          "oklch(61% 0.0471 257.53)",
+          "oklch(72% 0.0471 257.53)",
+          "oklch(84% 0.0471 257.53)",
+          "oklch(95% 0.0471 257.53)"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "分隔线",
+        "tonalRamp": [
+          "oklch(15% 0.0185 258.35)",
+          "oklch(26% 0.0185 258.35)",
+          "oklch(38% 0.0185 258.35)",
+          "oklch(49% 0.0185 258.35)",
+          "oklch(61% 0.0185 258.35)",
+          "oklch(72% 0.0185 258.35)",
+          "oklch(84% 0.0185 258.35)",
+          "oklch(95% 0.0185 258.35)"
+        ]
+      },
+      "line-strong": {
+        "role": "neutral",
+        "displayName": "较强边界",
+        "tonalRamp": [
+          "oklch(15% 0.0376 257.40)",
+          "oklch(26% 0.0376 257.40)",
+          "oklch(38% 0.0376 257.40)",
+          "oklch(49% 0.0376 257.40)",
+          "oklch(61% 0.0376 257.40)",
+          "oklch(72% 0.0376 257.40)",
+          "oklch(84% 0.0376 257.40)",
+          "oklch(95% 0.0376 257.40)"
+        ]
+      },
+      "focus": {
+        "role": "semantic",
+        "displayName": "蓝色焦点",
+        "tonalRamp": [
+          "oklch(15% 0.1696 263.13)",
+          "oklch(26% 0.1696 263.13)",
+          "oklch(38% 0.1696 263.13)",
+          "oklch(49% 0.1696 263.13)",
+          "oklch(61% 0.1696 263.13)",
+          "oklch(72% 0.1696 263.13)",
+          "oklch(84% 0.1696 263.13)",
+          "oklch(95% 0.1696 263.13)"
+        ]
+      },
+      "danger": {
+        "role": "semantic",
+        "displayName": "失败文字",
+        "tonalRamp": [
+          "oklch(15% 0.1596 27.81)",
+          "oklch(26% 0.1596 27.81)",
+          "oklch(38% 0.1596 27.81)",
+          "oklch(49% 0.1596 27.81)",
+          "oklch(61% 0.1596 27.81)",
+          "oklch(72% 0.1596 27.81)",
+          "oklch(84% 0.1596 27.81)",
+          "oklch(95% 0.1596 27.81)"
+        ]
+      },
+      "danger-soft": {
+        "role": "semantic",
+        "displayName": "失败底色",
+        "tonalRamp": [
+          "oklch(15% 0.0146 33.07)",
+          "oklch(26% 0.0146 33.07)",
+          "oklch(38% 0.0146 33.07)",
+          "oklch(49% 0.0146 33.07)",
+          "oklch(61% 0.0146 33.07)",
+          "oklch(72% 0.0146 33.07)",
+          "oklch(84% 0.0146 33.07)",
+          "oklch(95% 0.0146 33.07)"
+        ]
+      },
+      "success": {
+        "role": "semantic",
+        "displayName": "审核及完成文字",
+        "tonalRamp": [
+          "oklch(15% 0.0887 172.92)",
+          "oklch(26% 0.0887 172.92)",
+          "oklch(38% 0.0887 172.92)",
+          "oklch(49% 0.0887 172.92)",
+          "oklch(61% 0.0887 172.92)",
+          "oklch(72% 0.0887 172.92)",
+          "oklch(84% 0.0887 172.92)",
+          "oklch(95% 0.0887 172.92)"
+        ]
+      },
+      "success-soft": {
+        "role": "semantic",
+        "displayName": "审核及完成底色",
+        "tonalRamp": [
+          "oklch(15% 0.0158 166.73)",
+          "oklch(26% 0.0158 166.73)",
+          "oklch(38% 0.0158 166.73)",
+          "oklch(49% 0.0158 166.73)",
+          "oklch(61% 0.0158 166.73)",
+          "oklch(72% 0.0158 166.73)",
+          "oklch(84% 0.0158 166.73)",
+          "oklch(95% 0.0158 166.73)"
+        ]
+      },
+      "warning": {
+        "role": "semantic",
+        "displayName": "处理中文字",
+        "tonalRamp": [
+          "oklch(15% 0.1183 57.22)",
+          "oklch(26% 0.1183 57.22)",
+          "oklch(38% 0.1183 57.22)",
+          "oklch(49% 0.1183 57.22)",
+          "oklch(61% 0.1183 57.22)",
+          "oklch(72% 0.1183 57.22)",
+          "oklch(84% 0.1183 57.22)",
+          "oklch(95% 0.1183 57.22)"
+        ]
+      },
+      "warning-soft": {
+        "role": "semantic",
+        "displayName": "处理中底色",
+        "tonalRamp": [
+          "oklch(15% 0.0321 81.00)",
+          "oklch(26% 0.0321 81.00)",
+          "oklch(38% 0.0321 81.00)",
+          "oklch(49% 0.0321 81.00)",
+          "oklch(61% 0.0321 81.00)",
+          "oklch(72% 0.0321 81.00)",
+          "oklch(84% 0.0321 81.00)",
+          "oklch(95% 0.0321 81.00)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "headline": {
+        "displayName": "工作区标题",
+        "purpose": "紧凑工作区标题。"
+      },
+      "title": {
+        "displayName": "分区标题",
+        "purpose": "公共分区；具体组件保留已实现的18px与22px变体。"
+      },
+      "body": {
+        "displayName": "中文正文",
+        "purpose": "连续阅读的主要文字。"
+      },
+      "button": {
+        "displayName": "动作按钮",
+        "purpose": "主要与次要按钮；导航拥有独立字重。"
+      },
+      "label": {
+        "displayName": "字段标签",
+        "purpose": "表单字段名称。"
+      },
+      "assist": {
+        "displayName": "辅助信息",
+        "purpose": "元数据、说明与状态文字。"
+      }
+    },
+    "shadows": [
+      {
+        "name": "modal",
+        "value": "0 20px 50px rgb(16 23 21 / 24%)",
+        "purpose": "继承的共享弹窗投影。"
+      }
+    ],
+    "motion": [
+      {
+        "name": "control-state",
+        "value": "color 180ms ease-out, background-color 180ms ease-out, border-color 180ms ease-out",
+        "purpose": "仅在 prefers-reduced-motion: no-preference 时启用。"
+      },
+      {
+        "name": "project-selection",
+        "value": "background-color 150ms ease-out, border-color 150ms ease-out",
+        "purpose": "仅在允许动画时启用项目行过渡。"
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "compact-desktop-max",
+        "value": "1280px"
+      },
+      {
+        "name": "independent-scroll-min",
+        "value": "1100px"
+      },
+      {
+        "name": "stacked-workspace-max",
+        "value": "1000px"
+      },
+      {
+        "name": "narrow-max",
+        "value": "560px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "主按钮",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "提交、创建或启动当前明确动作。",
+      "html": "<button class=\"ds-primary\">新建项目</button>",
+      "css": ".ds-primary{font-family:\"Noto Sans SC\",\"Microsoft YaHei UI\",\"Microsoft YaHei\",\"Segoe UI\",sans-serif;font-size:var(--font-button,16px);font-weight:700;line-height:1.45;min-height:var(--control-height,44px);padding:10px 16px;border-radius:var(--radius-sm,8px);cursor:pointer;color:var(--surface,#fff);background:var(--primary,#315fc5);border:1px solid var(--primary,#315fc5);}.ds-primary:hover:not(:disabled){background:var(--primary-dark,#244b9f);border-color:var(--primary-dark,#244b9f);}.ds-primary:disabled{opacity:.55;cursor:not-allowed;}.ds-primary:focus-visible{outline:3px solid var(--focus,#2351b7);outline-offset:3px;}@media(prefers-reduced-motion:no-preference){.ds-primary{transition:color 180ms ease-out,background-color 180ms ease-out,border-color 180ms ease-out;}}"
+    },
+    {
+      "name": "次按钮",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "刷新、取消及其他次级操作。",
+      "html": "<button class=\"ds-secondary\">刷新</button>",
+      "css": ".ds-secondary{font-family:\"Noto Sans SC\",\"Microsoft YaHei UI\",\"Microsoft YaHei\",\"Segoe UI\",sans-serif;font-size:var(--font-button,16px);font-weight:700;line-height:1.45;min-height:var(--control-height,44px);padding:10px 16px;border-radius:var(--radius-sm,8px);cursor:pointer;color:var(--ink,#182944);background:var(--surface,#fff);border:1px solid #c5d1e3;}.ds-secondary:hover:not(:disabled){background:#f2f6ff;border-color:#7d99c0;}.ds-secondary:disabled{opacity:.55;cursor:not-allowed;}.ds-secondary:focus-visible{outline:3px solid var(--focus,#2351b7);outline-offset:3px;}@media(prefers-reduced-motion:no-preference){.ds-secondary{transition:color 180ms ease-out,background-color 180ms ease-out,border-color 180ms ease-out;}}"
+    },
+    {
+      "name": "项目输入框",
+      "kind": "input",
+      "refersTo": "project-input",
+      "description": "项目名称与参数输入；标签在上方。",
+      "html": "<label class=\"ds-field\">项目名称<input class=\"ds-input\" value=\"J85 直播录播 · 上午第一批\" /></label>",
+      "css": ".ds-field{display:grid;gap:8px;color:var(--text,#283a54);font:600 15px/1.45 \"Noto Sans SC\",\"Microsoft YaHei UI\",\"Microsoft YaHei\",\"Segoe UI\",sans-serif;}.ds-input{max-width:100%;min-height:var(--control-height,44px);padding:8px 12px;border:1px solid #b8c6da;border-radius:var(--radius-sm,8px);color:var(--ink,#182944);background:var(--surface,#fff);font:600 16px/1.45 \"Noto Sans SC\",\"Microsoft YaHei UI\",\"Microsoft YaHei\",\"Segoe UI\",sans-serif;}.ds-input:focus-visible{outline:3px solid var(--focus,#2351b7);outline-offset:3px;}"
+    },
+    {
+      "name": "主导航",
+      "kind": "nav",
+      "refersTo": "nav-item-active",
+      "description": "海军蓝侧栏中的当前工作区和普通入口。",
+      "html": "<nav class=\"ds-nav\" aria-label=\"主要工作区\"><button class=\"ds-nav-item\" aria-current=\"page\"><svg viewBox=\"0 0 24 24\" width=\"20\" height=\"20\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4 5h16v14H4z M4 9h16 M8 5l3 4 M14 5l3 4 M10 12l5 2-5 2z\"/></svg>视频剪辑</button><button class=\"ds-nav-item\">成片素材库</button></nav>",
+      "css": ".ds-nav{display:grid;gap:10px;padding:14px;background:#172d4f;border-radius:16px;}.ds-nav-item{display:flex;align-items:center;gap:12px;min-height:52px;padding:14px 16px;border:0;border-radius:10px;text-align:left;color:#d8e4f7;background:transparent;font:500 16px/1.45 \"Noto Sans SC\",\"Microsoft YaHei UI\",\"Microsoft YaHei\",\"Segoe UI\",sans-serif;cursor:pointer;}.ds-nav-item:hover{background:#254165;color:#fff;}.ds-nav-item[aria-current=\"page\"]{background:#e5edff;color:#172d4f;font-weight:700;}.ds-nav-item[aria-current=\"page\"]:hover{background:#f0f5ff;color:#172d4f;}.ds-nav-item:focus-visible{outline:2px solid var(--focus,#2351b7);outline-offset:2px;}@media(prefers-reduced-motion:no-preference){.ds-nav-item{transition:color 180ms ease-out,background-color 180ms ease-out,border-color 180ms ease-out;}}"
+    },
+    {
+      "name": "款号筛选",
+      "kind": "chip",
+      "refersTo": "sku-filter-selected",
+      "description": "选中、悬停与聚焦持续保持白字深蓝底。",
+      "html": "<button class=\"ds-sku\" aria-pressed=\"true\">J85 · 2 批</button>",
+      "css": ".ds-sku{font-family:\"Noto Sans SC\",\"Microsoft YaHei UI\",\"Microsoft YaHei\",\"Segoe UI\",sans-serif;font-size:var(--font-button,16px);font-weight:700;line-height:1.45;min-height:var(--control-height,44px);padding:10px 16px;border-radius:var(--radius-sm,8px);cursor:pointer;color:var(--surface,#fff);background:var(--primary,#315fc5);border:1px solid var(--primary,#315fc5);}.ds-sku[aria-pressed=\"true\"]:hover:not(:disabled),.ds-sku[aria-pressed=\"true\"]:focus-visible{color:var(--surface,#fff);background:var(--primary-dark,#244b9f);border-color:var(--primary-dark,#244b9f);}.ds-sku:focus-visible{outline:3px solid var(--focus,#2351b7);outline-offset:3px;}@media(prefers-reduced-motion:no-preference){.ds-sku{transition:color 180ms ease-out,background-color 180ms ease-out,border-color 180ms ease-out;}}"
+    },
+    {
+      "name": "状态标签",
+      "kind": "chip",
+      "refersTo": "status-failed",
+      "description": "静态标签以文字和语义色同时表达状态。",
+      "html": "<span class=\"ds-status\">处理失败</span>",
+      "css": ".ds-status{display:inline-block;max-width:100%;padding:4px 8px;border-radius:6px;white-space:normal;color:var(--danger,#aa3029);background:var(--danger-soft,#fff2ef);font:400 14px/1.5 \"Noto Sans SC\",\"Microsoft YaHei UI\",\"Microsoft YaHei\",\"Segoe UI\",sans-serif;}"
+    },
+    {
+      "name": "白色工作面",
+      "kind": "card",
+      "refersTo": "work-panel",
+      "description": "编辑、导入和详情的实体内容容器。",
+      "html": "<section class=\"ds-panel\"><h2 class=\"ds-panel-title\">项目素材</h2><p class=\"ds-panel-copy\">查看原片、参数与当前处理状态。</p></section>",
+      "css": ".ds-panel{padding:24px;border:0;border-radius:var(--radius-md,14px);color:var(--ink,#182944);background:var(--surface,#fff);box-shadow:none;font-family:\"Noto Sans SC\",\"Microsoft YaHei UI\",\"Microsoft YaHei\",\"Segoe UI\",sans-serif;}.ds-panel-title{margin:0 0 12px;font-size:var(--font-section,20px);line-height:1.3;font-weight:700;}.ds-panel-copy{margin:0;max-width:75ch;color:var(--text,#283a54);font-size:var(--font-body,17px);line-height:1.62;}"
+    },
+    {
+      "name": "项目选择行",
+      "kind": "button",
+      "description": "队列中的当前项目，选中通过白底与边界表达。",
+      "html": "<div class=\"ds-project-rail\"><button class=\"ds-project\" aria-current=\"true\"><strong>J85 上午第一批</strong><small>J85 · 3 条素材 · 20 条成片</small></button></div>",
+      "css": ".ds-project-rail{padding:12px;background:#eef3fc;border-radius:14px;}.ds-project{display:grid;width:100%;gap:12px;min-height:112px;padding:16px;border:1px solid transparent;border-radius:10px;text-align:left;background:transparent;box-shadow:none;font-family:\"Noto Sans SC\",\"Microsoft YaHei UI\",\"Microsoft YaHei\",\"Segoe UI\",sans-serif;cursor:pointer;}.ds-project:hover{background:#e2eaf8;}.ds-project[aria-current=\"true\"]{background:#fff;border-color:#9aafd2;}.ds-project strong{font-size:17px;font-weight:600;line-height:1.45;color:#203d68;overflow-wrap:anywhere;}.ds-project small{font-size:14px;line-height:1.45;color:#52657e;overflow-wrap:anywhere;}.ds-project:focus-visible{outline:3px solid var(--focus,#2351b7);outline-offset:3px;}@media(prefers-reduced-motion:no-preference){.ds-project{transition:background-color 150ms ease-out,border-color 150ms ease-out;}}"
+    },
+    {
+      "name": "错误详情",
+      "kind": "custom",
+      "description": "可读解释与可折叠技术原文并存。",
+      "html": "<section class=\"ds-failure\" role=\"alert\"><strong>视频处理文件无法访问</strong><p>确认素材仍可访问后，可手动重新尝试。</p><details><summary>查看技术详情</summary><pre>演示文本：原始技术信息显示在此处。</pre></details></section>",
+      "css": ".ds-failure{min-width:0;padding:16px 18px;background:var(--danger-soft,#fff2ef);border:1px solid #ecc3bc;border-radius:10px;color:#8e2b27;font-family:\"Noto Sans SC\",\"Microsoft YaHei UI\",\"Microsoft YaHei\",\"Segoe UI\",sans-serif;}.ds-failure>strong{font-size:17px;line-height:1.45;}.ds-failure>p{max-width:72ch;margin:8px 0 12px;color:#853b35;font-size:15px;line-height:1.65;}.ds-failure summary{width:fit-content;min-height:32px;padding:4px 0;cursor:pointer;font-size:14px;line-height:1.45;font-weight:600;}.ds-failure pre{max-height:230px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;margin:8px 0 0;padding:12px;color:#633832;background:#fffbfa;font-size:14px;line-height:1.6;}.ds-failure summary:focus-visible{outline:3px solid var(--focus,#2351b7);outline-offset:3px;}"
+    },
+    {
+      "name": "渐变工作区背景",
+      "kind": "custom",
+      "description": "整体背景的材料样本，白色编辑表面保持实体。",
+      "html": "<div class=\"ds-canvas\"><div class=\"ds-canvas-panel\">白色内容工作面</div></div>",
+      "css": ".ds-canvas{padding:24px;background:linear-gradient(118deg,#cfdef6 0%,#d8e4fb 34%,#e6dff1 64%,#f3ddd3 100%);}.ds-canvas-panel{padding:24px;border-radius:var(--radius-md,14px);color:var(--ink,#182944);background:var(--surface,#fff);font:400 17px/1.62 \"Noto Sans SC\",\"Microsoft YaHei UI\",\"Microsoft YaHei\",\"Segoe UI\",sans-serif;}"
+    }
+  ],
+  "narrative": {
+    "northStar": "渐变演播工作台",
+    "overview": "工作台以雾蓝到浅桃的连续背景承接多个内容工作区，海军蓝导航稳定定位，白色工作面承载编辑、证据与审核。钴蓝集中标记操作与当前选择，深色中文和明确的间距服务长时间批量工作。\n\n页面密度来自并列工作区、可换行的元信息和清晰的主次操作。背景提供气氛，内容区保留实体表面；真实素材、处理状态和失败原因始终能读懂。品牌沿用现有标记，操作图标使用统一 SVG 线条，本轮没有新增栅格装饰资源。",
+    "keyCharacteristics": [
+      "雾蓝至浅桃的全工作区渐变，配海军蓝导航与白色内容表面。",
+      "Noto Sans SC 中文为主，正文与按钮分别使用独立字号角色。",
+      "项目选择、当前阶段、状态和操作分别表达，选中态在悬停与键盘聚焦时继续清晰可辨。",
+      "深度主要由背景色、间距和细线形成，普通工作面保持平整。"
+    ],
+    "rules": [
+      {
+        "name": "The Readable Surface Rule",
+        "body": "渐变属于工作区背景，编辑与审核内容使用实体表面，文字不能直接依赖渐变中的某个位置获得对比。",
+        "section": "colors"
+      },
+      {
+        "name": "The Persistent Selection Rule",
+        "body": "款号筛选选中后保持白字深蓝底；悬停和键盘聚焦只加深底色，不能退回浅色次按钮背景。",
+        "section": "colors"
+      },
+      {
+        "name": "The Readable Density Rule",
+        "body": "通过布局重排、换行和独立滚动容纳内容，不能用缩小正文或截掉失败信息消除溢出。",
+        "section": "typography"
+      },
+      {
+        "name": "The Tonal Depth Rule",
+        "body": "主工作区先用底色和间距区分层级，投影只沿用已有浮层用途。",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** 保留渐变背景、海军蓝导航、白色工作面与钴蓝操作的角色关系。",
+      "**Do** 使用本地 Noto Sans SC 和已实现的默认字号层级。",
+      "**Do** 同时使用状态文字、语义颜色和可见焦点表达交互。",
+      "**Do** 检查选中态的 hover / focus，以及长名称、路径和错误详情的换行。",
+      "**Do** 复用现有品牌标记与线性 SVG 图标，素材预览使用真实关联内容。"
+    ],
+    "donts": [
+      "**Don't** 把编辑工作面替换为半透明渐变或重新铺回整页灰白背景。",
+      "**Don't** 通过缩小正文、裁切提示或隐藏主操作解决窗口变窄。",
+      "**Don't** 将绿色旧主题、演示统计或未经核实的处理结果继承为新视觉规范。",
+      "**Don't** 把验证演示图、seed 记录或浏览器视口模拟描述为用户批准效果图或真实系统缩放验收。"
+    ]
+  }
+}

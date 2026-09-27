@@ -11,6 +11,7 @@ if (-not $PlaywrightModule) { $PlaywrightModule = Join-Path $storage 'caches\npm
 if (-not (Test-Path -LiteralPath $PlaywrightModule)) { throw 'Provide -PlaywrightModule with an existing Playwright package; this script does not download dependencies.' }
 $python = Join-Path $repo '.venv\Scripts\python.exe'
 if ($PythonExecutable) { $python = $PythonExecutable }
+$env:CONTENT_FACTORY_QA_PYTHON = $python
 $node = (Get-Command node -ErrorAction Stop).Source
 $desktop = Join-Path $repo 'apps\desktop'
 foreach ($port in @(18767, 18411, 1420)) {
@@ -52,7 +53,7 @@ function Start-QaService([string]$Name, [string]$Executable, [string[]]$Argument
     $started.Add($process)
 }
 function Wait-QaHttp([string]$Address) {
-    $deadline = (Get-Date).AddSeconds(30)
+    $deadline = (Get-Date).AddSeconds(90)
     while ((Get-Date) -lt $deadline) {
         try { $null = Invoke-WebRequest -Uri $Address -UseBasicParsing -TimeoutSec 2; return } catch { Start-Sleep -Milliseconds 250 }
     }

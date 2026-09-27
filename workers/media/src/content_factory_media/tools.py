@@ -205,14 +205,19 @@ def copy_atomic(source: Path, destination: Path, *, expected_sha256: str | None 
     destination.parent.mkdir(parents=True, exist_ok=True)
     if destination.is_file() and sha256_file(destination) == (expected_sha256 or sha256_file(source)):
         return
-    temporary = destination.with_name(
-        f"{destination.name}.{os.getpid()}.{threading.get_ident()}.partial"
-    )
-    with source.open("rb") as incoming, temporary.open("wb") as outgoing:
-        shutil.copyfileobj(incoming, outgoing, length=1024 * 1024)
-        outgoing.flush()
-        os.fsync(outgoing.fileno())
-    os.replace(temporary, destination)
+    # Appending process/thread IDs to a SHA-256 filename pushed a valid 240-char
+    # destination to Windows MAX_PATH (260) in installed user profiles. Allocate
+    # a short exclusive sibling instead; same-directory replace stays atomic.
+    descriptor, name = tempfile.mkstemp(prefix=".copy-", suffix=".tmp", dir=destination.parent)
+    temporary = Path(name)
+    try:
+        with os.fdopen(descriptor, "wb") as outgoing, source.open("rb") as incoming:
+            shutil.copyfileobj(incoming, outgoing, length=1024 * 1024)
+            outgoing.flush()
+            os.fsync(outgoing.fileno())
+        os.replace(temporary, destination)
+    finally:
+        temporary.unlink(missing_ok=True)
 
 
 def write_json_atomic(path: str | Path, payload: Any) -> None:

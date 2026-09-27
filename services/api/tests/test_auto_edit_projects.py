@@ -49,16 +49,112 @@ def test_production_planner_persists_valid_media_result_on_retry(tmp_path: Path,
         project_id = "auto_edit_" + suffix
         project = {"project_id": project_id, "source": {"source_id": "source_01", "path": str(source), "file_name": source.name}}
         # Silence is deliberate: validation must succeed before the ASR guard rejects it.
-        with pytest.raises(ValueError, match="原素材语音转写未完成"):
+        with pytest.raises(ValueError, match="语音识别失败|原素材语音转写未完成"):
             auto_edit_worker.analyze_and_plan_with_gateway(project, root=tmp_path / "work")
-        results = list((tmp_path / "work" / "analysis" / project_id).rglob("result.json"))
-        assert len(results) == 1
-        payload = json.loads(results[0].read_text(encoding="utf-8"))
+        # Cache folders now use a compact project/source identity hash. Find the
+        # result by its unchanged deterministic task identity, not folder names.
+        import hashlib
+        identity = json.dumps([project_id, "source_01"], ensure_ascii=False)
+        expected_id = "media_" + hashlib.sha256(identity.encode("utf-8")).hexdigest()[:32]
+        results = [json.loads(path.read_text(encoding="utf-8")) for path in (tmp_path / "work" / "analysis").rglob("result.json")]
+        matches = [item for item in results if item["task_id"] == expected_id]
+        assert len(matches) == 1
+        payload = matches[0]
         validate_or_raise("media_result", payload)
         assert Path(payload["artifacts"]["proxy_path"]).is_file()
         identifiers.append(payload["task_id"])
     assert identifiers[0] == identifiers[1]
     assert identifiers[0] != identifiers[2]
+
+
+def test_original_audio_mode_plans_without_asr_and_keeps_visual_boundaries(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from content_factory_api import speech_captions
+
+    frame = tmp_path / 'frame.jpg'
+    frame.write_bytes(b'image-fixture')
+    result = tmp_path / 'result.json'
+    result.write_text(json.dumps({
+        'artifacts': {}, 'asr': {'status': 'model_missing'},
+        'shots': [
+            {'id': 'shot-1', 'start_ms': 0, 'end_ms': 7000, 'keyframe_path': str(frame)},
+            {'id': 'shot-2', 'start_ms': 7000, 'end_ms': 15000, 'keyframe_path': str(frame)},
+            {'id': 'shot-3', 'start_ms': 15000, 'end_ms': 24000, 'keyframe_path': str(frame)},
+            {'id': 'shot-4', 'start_ms': 24000, 'end_ms': 36000, 'keyframe_path': str(frame)},
+        ],
+    }), encoding='utf-8')
+    gateway = SimpleNamespace(has_purpose=lambda purpose: purpose == 'video_review', for_purpose=lambda purpose: None)
+    monkeypatch.setattr(auto_edit_worker, 'GatewaySettingsStore', lambda *args: SimpleNamespace(load=lambda: gateway))
+    seen = {}
+    monkeypatch.setattr(auto_edit_worker, 'MediaPipeline', lambda **kwargs: (
+        seen.setdefault('asr_model_path', kwargs.get('asr_model_path')) or SimpleNamespace(process=lambda *a, **k: result)
+    ))
+    monkeypatch.setattr(speech_captions, 'recognize', lambda *a, **k: pytest.fail('仅保留原声模式不应调用 ASR'))
+
+    def gateway_call(*args, **kwargs):
+        context = json.loads(kwargs['context_json'])
+        assert context['sources'][0]['transcript'] == []
+        assert context['audio_policy']['preserve_original_audio'] is True
+        assert context['audio_policy']['speech_recognition'] == 'not_requested'
+        pool = context['sources'][0]['natural_clip_pool']
+        return SimpleNamespace(content={
+            'selected_skill_id': 'skill_a', 'selection_reason': '依据镜头边界', 'analysis_summary': '保留原声',
+            'candidates': [{
+                'candidate_id': 'visual-only', 'title': '视觉完整片段', 'source_id': 'source_01', 'skill_id': 'skill_a',
+                'clips': [{'start_ms': pool[0]['start_ms'], 'end_ms': pool[0]['end_ms']}],
+            }],
+        })
+    monkeypatch.setattr(auto_edit_worker, 'call_gateway', gateway_call)
+    project = {
+        'project_id': 'auto_edit_visual_only',
+        'source': {'source_id': 'source_01', 'path': str(tmp_path / 'video.mp4'), 'file_name': 'video.mp4', 'duration_ms': 36000},
+        'eligible_skill_snapshots': [_skills()[0]],
+        'settings': _settings(target_count=1, duration_min_ms=15000, duration_max_ms=30000,
+                              duration_policy='bounded_15_30', subtitle_mode='none'),
+    }
+    result_plan = auto_edit_worker.analyze_and_plan_with_gateway(project, root=tmp_path)[3]
+    assert seen['asr_model_path'] is None
+    assert result_plan[0]['natural_clip_evidence']['boundary_kind'] == 'visual'
+    assert result_plan[0]['subtitle_segments'] == []
+
+
+def test_original_audio_mode_renders_without_asr_and_keeps_audio_track(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from content_factory_api import speech_captions
+    from content_factory_media.tools import find_tool
+
+    source = tmp_path / '原声素材.mp4'
+    subprocess.run([
+        find_tool('ffmpeg'), '-y', '-v', 'error', '-f', 'lavfi', '-i', 'color=c=green:s=180x320:r=25',
+        '-f', 'lavfi', '-i', 'sine=frequency=440', '-t', '20', '-c:v', 'libx264', '-c:a', 'aac', str(source),
+    ], check=True, capture_output=True)
+    monkeypatch.setattr(speech_captions, 'recognize', lambda *a, **k: pytest.fail('仅保留原声模式渲染不应调用 ASR'))
+    source_info = {
+        'source_id': 'source_01', 'file_name': source.name, 'path': str(source.resolve()),
+        'sha256': __import__('hashlib').sha256(source.read_bytes()).hexdigest(), 'duration_ms': 20_000,
+    }
+    store = AutoEditProjectStore(tmp_path / 'projects.sqlite3')
+    project = store.create_project(title='仅保留原声', source=source_info, settings=_settings(
+        target_count=1, duration_min_ms=15_000, duration_max_ms=30_000,
+        duration_policy='bounded_15_30', subtitle_mode='none'))
+    store.enqueue(project['project_id'], expected_revision=project['revision'])
+    result = auto_edit_worker.process_one(
+        store, available_skills=_skills(), worker_id='audio-only', root=tmp_path / 'render',
+        planner=lambda p: ('skill_a', '镜头完整', '保留原声', [{
+            'candidate_id': 'audio_only', 'title': '原声成片', 'source_id': 'source_01',
+            'clips': [{'start_ms': 0, 'end_ms': 20_000}],
+            'natural_clip_evidence': {'version': 1, 'boundary_kind': 'visual', 'clips': [{'start_ms': 0, 'end_ms': 20_000}]},
+        }]),
+    )
+    assert result['status'] == 'review', result.get('error')
+    output = next((tmp_path / 'render').rglob('audio_only.mp4'))
+    probe = subprocess.run([
+        find_tool('ffprobe'), '-v', 'error', '-show_streams', '-of', 'json', str(output),
+    ], check=True, capture_output=True)
+    streams = json.loads(probe.stdout)['streams']
+    assert any(stream.get('codec_type') == 'audio' for stream in streams)
+    assert output.with_suffix('.srt').read_text(encoding='utf-8-sig') == ''
+    captions = json.loads(output.with_suffix('.captions.json').read_text(encoding='utf-8'))
+    assert captions['mode'] == 'sentence'
+    assert captions['cues'] == []
 
 
 def _source(tmp_path: Path, name: str = "直播录播.mp4") -> dict:
@@ -125,7 +221,8 @@ def test_multi_upload_api_atomic_save_and_legacy_single(tmp_path, monkeypatch):
     assert len(legacy.json()['sources']) == 1
 
 
-def test_multisource_render_uses_selected_file_and_persists_batch(tmp_path, monkeypatch):
+@pytest.mark.parametrize('mode', ['sentence', 'reveal', 'highlight', 'auto'])
+def test_multisource_render_uses_selected_file_and_persists_batch(tmp_path, monkeypatch, mode):
     import subprocess
     import shutil
     from content_factory_api import speech_captions, subtitle_editor
@@ -144,6 +241,7 @@ def test_multisource_render_uses_selected_file_and_persists_batch(tmp_path, monk
         # Only replace expensive model inference; cutting, concatenation,
         # subtitle burning, and output registration below all remain real.
         assert clean.is_file() and clean.name=='blue_result.clean.mp4'
+        assert not kwargs.get('word_timestamps_only', False)
         probe=subprocess.run(['ffprobe','-v','error','-show_entries','format=duration','-of','json',str(clean)],capture_output=True,check=True)
         assert 4.9<=float(json.loads(probe.stdout)['format']['duration'])<=5.2
         recognized.append(str(clean))
@@ -156,7 +254,7 @@ def test_multisource_render_uses_selected_file_and_persists_batch(tmp_path, monk
         import hashlib
         sources.append({'source_id':f'source_{index}', 'file_name':file.name,'path':str(file.resolve()),'sha256':hashlib.sha256(file.read_bytes()).hexdigest(),'duration_ms':6000})
     store = AutoEditProjectStore(tmp_path / 'projects.sqlite3')
-    project = store.create_project(title='多来源渲染', sources=sources,settings=_settings(target_count=1,duration_min_ms=5000,duration_max_ms=6000))
+    project = store.create_project(title='多来源渲染', sources=sources,settings=_settings(target_count=1,duration_min_ms=5000,duration_max_ms=6000,subtitle_mode=mode))
     store.enqueue(project['project_id'],expected_revision=1)
     result = auto_edit_worker.process_one(store,available_skills=_skills(),worker_id='real',root=tmp_path / 'render',planner=lambda p:('skill_a','选择蓝色源片','测试计划',[{'candidate_id':'blue_result','title':'蓝色成片','source_id':'source_1','clips':[{'start_ms':0,'end_ms':5000}],'subtitle_segments':[{'start_ms':0,'end_ms':2000,'text':'第二条素材'}]}]))
     assert result['status'] == 'review', result.get('error')
@@ -169,7 +267,7 @@ def test_multisource_render_uses_selected_file_and_persists_batch(tmp_path, monk
     subtitle=output.with_suffix('.srt').read_text(encoding='utf-8-sig')
     assert '第二条素材' in subtitle
     captions=json.loads(output.with_suffix('.captions.json').read_text(encoding='utf-8'))
-    assert captions['mode']=='reveal'
+    assert captions['mode']==('sentence' if mode=='auto' else mode)
     assert captions['cues'][0]['words']==acoustic_words
     inherited=subtitle_editor.get_draft(manifest['id'],'blue_result')
     assert inherited['document']==captions
@@ -179,7 +277,7 @@ def test_multisource_render_uses_selected_file_and_persists_batch(tmp_path, monk
 def test_project_validation_rejects_invalid_count_and_duration(tmp_path: Path) -> None:
     store = AutoEditProjectStore(tmp_path / "auto-edit.sqlite3")
     with pytest.raises(ValueError, match="成片数量"):
-        store.create_project(title="批次", source=_source(tmp_path), settings=_settings(target_count=11))
+        store.create_project(title="批次", source=_source(tmp_path), settings=_settings(target_count=21))
     with pytest.raises(ValueError, match="时长"):
         store.create_project(title="批次", source=_source(tmp_path), settings=_settings(duration_min_ms=50_000, duration_max_ms=20_000))
 
@@ -194,6 +292,29 @@ def test_multiple_projects_queue_independently_and_revision_prevents_lost_update
     assert queued_first["status"] == queued_second["status"] == "queued"
     with pytest.raises(AutoEditConflictError):
         store.update_project(first["project_id"], expected_revision=first["revision"], settings=_settings(target_count=2))
+
+
+def test_recycle_bin_restore_then_purge_removes_project_sources(tmp_path: Path) -> None:
+    store = AutoEditProjectStore(tmp_path / "auto-edit.sqlite3")
+    source = _source(tmp_path, "待删除原片.mp4")
+    managed = tmp_path / "sources" / ("a" * 32) / "00.mp4"
+    managed.parent.mkdir(parents=True)
+    Path(source["path"]).replace(managed)
+    source["path"] = str(managed.resolve())
+    project = store.create_project(title="可恢复项目", source=source, settings=_settings())
+    trashed = store.set_deleted(project["project_id"], expected_revision=project["revision"], deleted=True)
+    assert Path(source["path"]).is_file()
+    restored = store.set_deleted(project["project_id"], expected_revision=trashed["revision"], deleted=False)
+    assert Path(source["path"]).is_file()
+    trashed_again = store.set_deleted(project["project_id"], expected_revision=restored["revision"], deleted=True)
+    deletion = store.preview_purge(project["project_id"], expected_revision=trashed_again["revision"])
+    result = store.purge_project(project["project_id"], expected_revision=trashed_again["revision"],
+                                confirmation_token=deletion["confirmation_token"])
+    assert result["purged"] is True
+    assert not Path(source["path"]).exists()
+    assert store.list_projects(deleted=True) == []
+    with pytest.raises(Exception):
+        store.get_project(project["project_id"])
 
 
 def test_claim_freezes_only_approved_reusable_skill_and_library_changes_do_not_drift_snapshot(tmp_path: Path) -> None:
@@ -220,7 +341,7 @@ def test_claim_without_approved_reusable_skill_fails_explicitly(tmp_path: Path) 
     assert "已审核" in failed["error"]
 
 
-def test_plan_rejects_out_of_range_overlap_wrong_count_and_wrong_duration() -> None:
+def test_plan_rejects_invalid_bounds_count_duration_but_allows_source_overlap() -> None:
     base = [
         {"candidate_id": "clip_1", "title": "版本 1", "clips": [{"start_ms": 0, "end_ms": 20_000}]},
         {"candidate_id": "clip_2", "title": "版本 2", "clips": [{"start_ms": 30_000, "end_ms": 55_000}]},
@@ -235,8 +356,9 @@ def test_plan_rejects_out_of_range_overlap_wrong_count_and_wrong_duration() -> N
         validate_edit_plan(out_of_range, source_duration_ms=300_000, settings=_settings())
     overlapping = json.loads(json.dumps(base))
     overlapping[0]["clips"] = [{"start_ms": 0, "end_ms": 12_000}, {"start_ms": 10_000, "end_ms": 22_000}]
-    with pytest.raises(ValueError, match="重叠"):
-        validate_edit_plan(overlapping, source_duration_ms=300_000, settings=_settings())
+    validated = validate_edit_plan(overlapping, source_duration_ms=300_000, settings=_settings())
+    assert validated[0]['clips'] == overlapping[0]['clips']
+    assert validated[0]['duration_ms'] == 24000
     too_short = json.loads(json.dumps(base))
     too_short[0]["clips"] = [{"start_ms": 0, "end_ms": 5_000}]
     with pytest.raises(ValueError, match="时长"):

@@ -10,6 +10,7 @@ import "./gateway-settings.css";
 import "./ui-workspaces.css";
 import "./creator-ui.css";
 import "./footage-batches.css";
+import "./studio-theme.css";
 
 const rootElement = document.getElementById("root");
 

@@ -420,6 +420,33 @@ def test_verified_model_upsert_is_idempotent_but_protocol_change_preserves_old_s
 
 
 @pytest.mark.skipif(os.name != "nt", reason="DPAPI only exists on Windows")
+def test_verified_speech_model_adds_audio_route_without_replacing_visual_route(tmp_path: Path) -> None:
+    store = GatewaySettingsStore(tmp_path / "gateway.json")
+    visual = store.upsert_verified_model(
+        base_url="https://relay.example.com/v1",
+        upstream_model_id="relay-vision-model",
+        display_name="视觉模型",
+        provider="openai_compatible",
+        api_mode="chat_completions",
+        api_key="fixture-secret-key",
+    )
+
+    saved = store.upsert_verified_speech_model(
+        base_url="https://relay.example.com/v1",
+        upstream_model_id="relay-asr-model",
+        display_name="语音模型",
+        provider="openai_compatible",
+        api_mode="chat_completions",
+        api_key="fixture-secret-key",
+    )
+
+    assert saved.for_purpose("video_review").model_id == visual.model_id
+    assert saved.for_purpose("speech").model == "relay-asr-model"
+    assert "audio" in saved.for_purpose("speech").modalities
+    assert saved.routing["speech"] == saved.for_purpose("speech").model_id
+
+
+@pytest.mark.skipif(os.name != "nt", reason="DPAPI only exists on Windows")
 def test_verified_model_upsert_at_eight_model_limit_leaves_configuration_unchanged(
     tmp_path: Path,
 ) -> None:

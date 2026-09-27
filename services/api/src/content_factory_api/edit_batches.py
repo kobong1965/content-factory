@@ -20,8 +20,10 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
+from .candidate_contract import CandidateIdentity
+
 router = APIRouter(prefix='/s7/footage-batches', tags=['footage editing'])
-Identity = Annotated[str, Field(pattern=r'^[A-Za-z0-9_-]{1,100}$')]
+Identity = CandidateIdentity
 Text = Annotated[str, Field(min_length=1, max_length=20000)]
 
 
@@ -54,7 +56,8 @@ class Manifest(StrictModel):
     id: Identity
     title: str = Field(min_length=1, max_length=200)
     analysis_summary: Text
-    candidates: list[Candidate] = Field(min_length=1, max_length=10)
+    candidates: list[Candidate] = Field(min_length=1, max_length=20)
+    sku: str | None = Field(default=None, max_length=100)
 
 
 class ImportRequest(StrictModel):
@@ -71,6 +74,50 @@ class ReviewRequest(StrictModel):
 class ProductRequest(StrictModel):
     revision: int = Field(ge=1)
     sku: str = Field(max_length=100)
+
+
+def _manifest_validation_message(error: ValidationError) -> str:
+    """Describe only trusted field labels, never rejected data or extra keys."""
+    labels = {
+        'id': '内部编号', 'title': '标题', 'source_path': '原片路径',
+        'source_start_ms': '原片起点', 'source_end_ms': '原片终点',
+        'video_path': '成片路径', 'subtitle_path': '字幕路径', 'cover_path': '封面路径',
+        'hook': '剪辑重点', 'benchmark_refs': '对标依据', 'review_notes': '审核提示',
+        'clips': '选段', 'start_ms': '开始时间', 'end_ms': '结束时间',
+        'schema_version': '清单版本', 'analysis_summary': '分析摘要',
+        'candidates': '成片列表', 'sku': '款号',
+    }
+    messages = []
+    for issue in error.errors(include_input=False, include_url=False)[:3]:
+        location = issue['loc']
+        if issue['type'] == 'json_invalid':
+            messages.append('清单不是完整有效的 JSON')
+            continue
+        position = 0
+        scope = '批次'
+        if len(location) >= 2 and location[0] == 'candidates' and isinstance(location[1], int):
+            scope = f'第{location[1]+1}条成片'
+            position = 2
+        field = location[position] if len(location) > position else None
+        label = labels.get(field, '清单字段')
+        subject = f'{scope}的{label}'
+        kind = issue['type']
+        if kind == 'extra_forbidden':
+            reason = f'{scope}包含未支持的字段'
+        elif field == 'id' and kind == 'string_pattern_mismatch':
+            reason = f'{subject}不合法：仅允许 1–100 个英文字母、数字、下划线或短横线'
+        elif kind == 'missing':
+            reason = f'{subject}缺失'
+        elif kind == 'string_too_long':
+            reason = f'{subject}过长，最多 {issue["ctx"]["max_length"]} 个字符'
+        elif kind == 'string_too_short':
+            reason = f'{subject}不能为空'
+        elif field == 'schema_version':
+            reason = '清单版本不受支持'
+        else:
+            reason = f'{subject}格式不符合要求'
+        messages.append(reason)
+    return '批次未导入：' + '；'.join(messages) + '；原有批次不受影响。'
 
 
 @contextmanager
@@ -152,8 +199,17 @@ def import_batch(request: ImportRequest):
         if not path.is_absolute() or path.suffix.lower() != '.json' or path.stat().st_size > 4*1024*1024:
             raise ValueError('请选择有效的本地批次 JSON 文件，最大 4 MB')
         data = Manifest.model_validate_json(path.read_text(encoding='utf-8-sig'))
+        seen_ids = set()
+        for index, candidate in enumerate(data.candidates, 1):
+            if candidate.id in seen_ids:
+                raise HTTPException(422, f'批次未导入：第{index}条成片的内部编号与前面的成片重复；原有批次不受影响。')
+            seen_ids.add(candidate.id)
         root = path.resolve().parent
-        canonical = json.dumps(data.model_dump(), ensure_ascii=False, sort_keys=True)
+        canonical_data = data.model_dump()
+        # Keep the exact canonical shape of legacy manifests and their digests.
+        if data.sku is None:
+            canonical_data.pop('sku')
+        canonical = json.dumps(canonical_data, ensure_ascii=False, sort_keys=True)
         digest = hashlib.sha256(canonical.encode('utf-8')).hexdigest()
         # Do not overwrite an existing human decision even if files were moved.
         with _db() as db:
@@ -164,8 +220,6 @@ def import_batch(request: ImportRequest):
                 existing = json.loads(old[1])
                 _verify_resources(existing['candidates'])
                 return existing
-        if len({c.id for c in data.candidates}) != len(data.candidates):
-            raise ValueError('同一批次的成片编号不能重复')
         probe_cache, hash_cache = {}, {}
         candidates = []
         for candidate in data.candidates:
@@ -192,7 +246,7 @@ def import_batch(request: ImportRequest):
                                'reviewed_by': '', 'reviewed_at': None,
                                'resources': {kind: {'path': str(p), 'sha256': hash_cache[p], 'size': p.stat().st_size,
                                                     'mtime_ns': p.stat().st_mtime_ns} for kind,p in resources.items()}})
-        batch = {**data.model_dump(), 'candidates': candidates, 'revision': 1,
+        batch = {**canonical_data, 'candidates': candidates, 'revision': 1,
                  'created_at': datetime.now(timezone.utc).isoformat()}
         with _db() as db:
             db.execute('BEGIN IMMEDIATE')
@@ -203,7 +257,9 @@ def import_batch(request: ImportRequest):
                 return json.loads(old[1])
             db.execute('INSERT INTO batches VALUES (?,?,?)', (data.id, digest, json.dumps(batch, ensure_ascii=False)))
         return batch
-    except (OSError, ValueError, ValidationError, subprocess.SubprocessError, KeyError, StopIteration):
+    except ValidationError as error:
+        raise HTTPException(422, _manifest_validation_message(error)) from None
+    except (OSError, ValueError, subprocess.SubprocessError, KeyError, StopIteration):
         raise HTTPException(422, '批次未导入：请检查清单版本、文件路径、视频音轨和选段时间；原有批次不受影响。') from None
 
 

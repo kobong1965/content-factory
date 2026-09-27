@@ -18,6 +18,7 @@ from . import __version__
 from .edit_batches import router as edit_batches_router
 from .subtitle_editor import router as subtitle_editor_router
 from .auto_edit import recover_auto_edit_queue, router as auto_edit_router
+from .skill_packages import router as skill_packages_router
 from .local_exports import router as local_exports_router
 from .library_management import router as library_management_router
 from .software_updates import router as software_updates_router, update_gate
@@ -145,6 +146,7 @@ app.include_router(s5_router)
 app.include_router(s6_router)
 app.include_router(s7_router)
 app.include_router(auto_edit_router)
+app.include_router(skill_packages_router)
 app.include_router(edit_batches_router)
 app.include_router(subtitle_editor_router)
 app.include_router(local_exports_router)

@@ -14,6 +14,34 @@ import uuid
 import zipfile
 from urllib.request import urlopen
 
+def fetch_missing_payloads(source, manifest):
+    source.mkdir(parents=True, exist_ok=True)
+    for part in manifest['parts']:
+        target = source / part['name']
+        if target.is_file() and target.stat().st_size == part['bytes'] and digest(target) == part['sha256']:
+            continue
+        url = part.get('url')
+        if not url:
+            raise ValueError('Missing or damaged component: ' + part['name'])
+        partial = target.with_suffix(target.suffix + '.partial')
+        try:
+            print('Downloading '+part['name']+' ...', flush=True)
+            with urlopen(url, timeout=60) as response, partial.open('wb') as output:
+                total = int(response.headers.get('Content-Length') or part['bytes'])
+                received = 0
+                while True:
+                    block = response.read(1024 * 1024)
+                    if not block: break
+                    output.write(block)
+                    received += len(block)
+                    if received == len(block) or received % (64 * 1024 * 1024) < len(block):
+                        print(f'  {received}/{total} bytes', flush=True)
+            if partial.stat().st_size != part['bytes'] or digest(partial) != part['sha256']:
+                raise ValueError('Downloaded component checksum mismatch: ' + part['name'])
+            partial.replace(target)
+        finally:
+            partial.unlink(missing_ok=True)
+
 
 def install_vc_runtime(executable, environment):
     """Windows requests elevation only if the required machine runtime is absent."""
@@ -86,6 +114,7 @@ def ensure_readiness_manifest(destination):
 
 
 def install(source, target, manifest, *, install_prerequisites=True):
+    fetch_missing_payloads(source, manifest)
     verify_payloads(source, manifest)
     version = manifest['version']
     if not isinstance(version, str) or not __import__('re').fullmatch(r'\d+\.\d+\.\d+', version):
@@ -144,6 +173,10 @@ def install(source, target, manifest, *, install_prerequisites=True):
             if code not in (0,1638,3010):
                 raise RuntimeError('VC runtime installation failed: '+str(code))
         webview = False
+        # Evergreen WebView2 may register only a product version (without a
+        # friendly `name`) on some Windows installations. Check the official
+        # product GUID directly before attempting the bundled installer.
+        webview_guids = ('{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}',)
         for hive in (winreg.HKEY_LOCAL_MACHINE,winreg.HKEY_CURRENT_USER):
             for base in (r'SOFTWARE\Microsoft\EdgeUpdate\Clients',r'SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients'):
                 try:
@@ -158,6 +191,14 @@ def install(source, target, manifest, *, install_prerequisites=True):
                                     pass
                 except OSError:
                     pass
+            for base in (r'SOFTWARE\Microsoft\EdgeUpdate\Clients',r'SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients'):
+                for guid in webview_guids:
+                    try:
+                        with winreg.OpenKey(hive, base+'\\'+guid) as child:
+                            pv = winreg.QueryValueEx(child, 'pv')[0]
+                            webview |= bool(pv and pv != '0.0.0.0')
+                    except OSError:
+                        pass
         if not webview:
             code = subprocess.run([str(stage/'prerequisites/WebView2-x64.exe'),'/silent','/install'],env=env).returncode
             if code not in (0,3010):
